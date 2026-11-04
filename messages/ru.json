@@ -1,0 +1,16 @@
+{
+  "meta.title": "Практикум по данным",
+  "meta.description": "Практикум по анализу данных на финансовых задачах",
+  "a11y.skipToContent": "Перейти к содержимому",
+  "home.title": "Задачи",
+  "home.lead": "Учимся анализировать данные на финансовых задачах.",
+  "home.count": "Всего: {count}",
+  "home.pathLabel": "Путь задач",
+  "home.taskNumber": "Задача {number}",
+  "home.empty": "Задач пока нет.",
+  "home.error": "Не удалось загрузить задачи. Попробуйте обновить страницу.",
+  "skill.read": "Чтение таблицы",
+  "skill.calc": "Вычисление",
+  "skill.functions": "Функции",
+  "skill.conclude": "Вывод"
+}

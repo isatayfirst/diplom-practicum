@@ -19,7 +19,7 @@ flowchart LR
   -> сверка с эталоном (только на сервере) -> запись попытки в Supabase
   -> вердикт клиенту (correct / incorrect / invalid_format / teacher)
 ```
-Эталоны не покидают сервер; клиент читает задачи только из `tasks_public`.
+Эталоны не покидают сервер. Браузер не обращается к базе: сервер читает задачи из `tasks_public` ключом `SUPABASE_SERVICE_ROLE_KEY` (`lib/tasks.ts`, только серверный код).
 
 ## Структура папок (предлагаемая)
 ```
@@ -44,7 +44,23 @@ AGENTS.md DESIGN.md BACKEND.md ARCHITECTURE.md ROADMAP.md SESSIONS.md   (кор�
 - Ключи переводов: `раздел.смысл` (например `task.submit`), одинаковые в kk и ru.
 
 ## Локальный запуск
-Будет в шаге 1.
+Нужны Node.js 22 и npm.
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+В `.env.local` заполните `NEXT_PUBLIC_SUPABASE_URL` и `SUPABASE_SERVICE_ROLE_KEY`, каждое значение одной строкой. Сайт откроется на http://localhost:3000.
+
+Проверка и продакшен-сборка:
+
+```bash
+npm run lint
+npm run build
+npm run start
+```
 
 ## Документация и шаги
 Файлы документации лежат в корне. Работа идёт по шагам из ROADMAP.md, правила сессий — в AGENTS.md, история — в SESSIONS.md.
