@@ -7,6 +7,11 @@
   --color-text-secondary: #4a525a;
   --color-error-bg: #fdecea;
   --color-error-text: #8a1c12;
+  --color-success-bg: #e6f4ec;
+  --color-success-text: #084d29;
+  --color-hint-bg: #fff4dc;
+  --color-hint-text: #7a4306;
+  --color-border: #767f88;
 }
 
 *,
@@ -30,7 +35,8 @@ body {
 h1,
 h2,
 p,
-ol {
+ol,
+fieldset {
   margin: 0;
 }
 
@@ -166,6 +172,272 @@ h2 {
   font-weight: 600;
 }
 
+.task-card {
+  position: relative;
+}
+
+.task-card:has(.task-link:focus-visible) {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.task-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.task-link:focus-visible {
+  outline: none;
+}
+
+/* Вся карточка кликабельна: цель нажатия больше 44 px. */
+.task-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 8px;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Клавиатурный фокус не должен прятаться под нижней панелью. */
+html:has(.answer-panel) {
+  scroll-padding-bottom: 280px;
+}
+
+.task-page {
+  max-width: 1120px;
+  padding-bottom: 0;
+}
+
+.task-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.task-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.task-title {
+  font-size: 1.25rem;
+}
+
+.data-table {
+  min-width: 0;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.table-hint {
+  margin: 4px 0 12px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+th,
+td {
+  padding: 8px;
+  border-bottom: 1px solid var(--color-accent-soft);
+  text-align: left;
+  vertical-align: middle;
+}
+
+thead th {
+  border-bottom: 2px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  vertical-align: bottom;
+}
+
+tbody th {
+  font-weight: 600;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+.row-marked {
+  background: var(--color-accent-soft);
+}
+
+.mark-cell {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+  text-align: center;
+}
+
+.mark-cell input {
+  width: 24px;
+  height: 24px;
+  margin: 10px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.answer-panel {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  max-height: 70vh;
+  margin: 0 -16px;
+  padding: 12px 16px 16px;
+  overflow-y: auto;
+  border-top: 2px solid var(--color-accent);
+  background: var(--color-surface);
+}
+
+.answer-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.answer-options legend,
+.answer-label {
+  padding: 0;
+  font-weight: 600;
+}
+
+.answer-options legend {
+  margin-bottom: 8px;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.answer-option:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  font-weight: 600;
+}
+
+.answer-option input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.answer-field {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+textarea.answer-field {
+  resize: vertical;
+}
+
+.answer-field[aria-invalid="true"] {
+  border: 2px solid var(--color-error-text);
+}
+
+.answer-hint {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.answer-status {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+.answer-status-icon {
+  flex: none;
+  font-weight: 700;
+}
+
+.answer-status-correct {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.answer-status-incorrect,
+.answer-status-network {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
+.answer-status-invalid_format {
+  background: var(--color-hint-bg);
+  color: var(--color-hint-text);
+}
+
+.answer-submit {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--color-accent);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.answer-submit[aria-disabled="true"] {
+  cursor: progress;
+}
+
 @media (min-width: 768px) {
   .page {
     padding: 48px 24px 64px;
@@ -181,5 +453,40 @@ h2 {
 
   .task-card {
     padding: 20px 24px;
+  }
+
+  .task-page {
+    padding-bottom: 0;
+  }
+
+  .answer-panel {
+    margin: 0 -24px;
+    padding-inline: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html:has(.answer-panel) {
+    scroll-padding-bottom: 0;
+  }
+
+  .task-page {
+    padding-bottom: 64px;
+  }
+
+  .task-layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .answer-panel {
+    top: 24px;
+    bottom: auto;
+    max-height: calc(100vh - 48px);
+    margin: 0;
+    padding: 20px;
+    border-top: 0;
+    border-radius: 12px;
   }
 }

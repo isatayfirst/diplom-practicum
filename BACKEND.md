@@ -32,10 +32,16 @@ Next.js (App Router, TypeScript) + Supabase + деплой на Vercel.
 - **Тесты** и **ответы на тесты**: таблиц нет.
 
 ## API
-- `POST /api/answer` — серверная проверка ответа.
-  - Вердикты: `correct`, `incorrect`, `invalid_format`, `teacher`.
+- `POST /api/answer` — серверная проверка ответа (`app/api/answer/route.ts`, логика в `lib/answers.ts`).
+  - Запрос: JSON `{ "orderNo": 1, "answer": "строка" }`. `orderNo` — целое число, `answer` — строка.
+  - Ответ 200: только `{ "verdict": "..." }`. Вердикты: `correct`, `incorrect`, `invalid_format`, `teacher`.
+  - Ошибки: 400 `{ "error": "bad_request" }` (не JSON или неверный `orderNo`), 404 `{ "error": "not_found" }` (нет задачи), 500 `{ "error": "server_error" }`.
+  - `number`: десятичный разделитель — запятая или точка; верно, если |ответ − эталон| ≤ `tolerance`, при пустом `tolerance` нужно точное равенство. Не число или пустая строка дают `invalid_format`. Пробелы внутри числа и запись вида `1e3` числом не считаются.
+  - `choice`: значение не из `options` даёт `invalid_format`.
+  - `text`: вердикт `teacher`, ответ не сохраняется (хранение выводов — шаг 5). Пустой текст даёт `invalid_format`.
+  - Ответ API никогда не содержит эталон, допуск или рубрику.
   - `invalid_format` не считается неверной попыткой.
-  - Лимит: 30 попыток в минуту.
+  - Пока не сделано (шаг 3): проверка сессии, запись попытки, лимит 30 попыток в минуту.
 
 ## Вход
 - Ученик: класс + личный код, подписанный httpOnly cookie.

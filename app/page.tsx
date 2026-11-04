@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { t } from "@/lib/messages";
 import { getTasks, type TaskListItem } from "@/lib/tasks";
 
@@ -42,7 +43,11 @@ export default async function HomePage() {
               </span>
               <article className="task-card">
                 <div className="task-meta">
-                  <h2>{t("home.taskNumber", { number: task.order_no })}</h2>
+                  <h2>
+                    <Link className="task-link" href={`/tasks/${task.order_no}`}>
+                      {t("home.taskNumber", { number: task.order_no })}
+                    </Link>
+                  </h2>
                   <span className="task-skill">{t(`skill.${task.skill}`)}</span>
                 </div>
                 <p>{task.statement_kk}</p>
