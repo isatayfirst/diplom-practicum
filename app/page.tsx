@@ -1,12 +1,18 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import ProgressBar from "@/components/ProgressBar";
+import RefreshOnReturn from "@/components/RefreshOnReturn";
+import TaskPath from "@/components/TaskPath";
+import { getHomeState, type HomeState } from "@/lib/home";
 import { t } from "@/lib/messages";
-import { getTasks, type TaskListItem } from "@/lib/tasks";
+import { readSession, SESSION_COOKIE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-async function loadTasks(): Promise<TaskListItem[] | null> {
+async function loadHomeState(studentId: string): Promise<HomeState | null> {
   try {
-    return await getTasks();
+    return await getHomeState(studentId);
   } catch (error) {
     console.error(error);
     return null;
@@ -14,48 +20,63 @@ async function loadTasks(): Promise<TaskListItem[] | null> {
 }
 
 export default async function HomePage() {
-  const tasks = await loadTasks();
+  const studentId = readSession((await cookies()).get(SESSION_COOKIE)?.value);
+  if (!studentId) redirect("/login");
 
-  return (
-    <main id="content" tabIndex={-1} className="page">
-      <header className="page-header">
-        <h1>{t("home.title")}</h1>
-        <p className="lead">{t("home.lead")}</p>
-        {tasks && tasks.length > 0 && (
-          <p className="count">{t("home.count", { count: tasks.length })}</p>
-        )}
-      </header>
+  const state = await loadHomeState(studentId);
 
-      {tasks === null && (
+  if (!state) {
+    return (
+      <main id="content" tabIndex={-1} className="page">
+        <header className="page-header">
+          <h1>{t("home.title")}</h1>
+        </header>
         <p className="notice notice-error" role="alert">
           {t("home.error")}
         </p>
+      </main>
+    );
+  }
+
+  if (state.variant === "control") {
+    return (
+      <main id="content" tabIndex={-1} className="page">
+        <header className="page-header">
+          <h1>{t("home.welcome")}</h1>
+        </header>
+        <p className="notice">{t("home.control")}</p>
+      </main>
+    );
+  }
+
+  const { variant, tasks, solvedCount, nextOrderNo } = state;
+  const first = variant === "first";
+
+  return (
+    <main id="content" tabIndex={-1} className="page">
+      <RefreshOnReturn />
+      <header className="page-header">
+        <h1>{t(first ? "home.welcome" : "home.returningTitle")}</h1>
+        <p className="lead">{t(first ? "home.firstLead" : "home.returningLead")}</p>
+      </header>
+
+      {!first && <ProgressBar solved={solvedCount} total={tasks.length} />}
+
+      {nextOrderNo !== null ? (
+        <section className="next-card" aria-labelledby="next-title">
+          <p className="next-eyebrow">{t(first ? "home.startEyebrow" : "home.continueEyebrow")}</p>
+          <h2 id="next-title" className="next-title">
+            {t("home.taskNumber", { number: nextOrderNo })}
+          </h2>
+          <Link className="next-link" href={`/tasks/${nextOrderNo}`}>
+            {t("home.goToTask", { number: nextOrderNo })}
+          </Link>
+        </section>
+      ) : (
+        <p className="notice">{t(tasks.length > 0 ? "home.noNext" : "home.empty")}</p>
       )}
 
-      {tasks?.length === 0 && <p className="notice">{t("home.empty")}</p>}
-
-      {tasks && tasks.length > 0 && (
-        <ol className="task-path" aria-label={t("home.pathLabel")}>
-          {tasks.map((task) => (
-            <li key={task.id} className="task-step">
-              <span className="task-marker" aria-hidden="true">
-                {task.order_no}
-              </span>
-              <article className="task-card">
-                <div className="task-meta">
-                  <h2>
-                    <Link className="task-link" href={`/tasks/${task.order_no}`}>
-                      {t("home.taskNumber", { number: task.order_no })}
-                    </Link>
-                  </h2>
-                  <span className="task-skill">{t(`skill.${task.skill}`)}</span>
-                </div>
-                <p>{task.statement_kk}</p>
-              </article>
-            </li>
-          ))}
-        </ol>
-      )}
+      {tasks.length > 0 && <TaskPath tasks={tasks} nextOrderNo={nextOrderNo} />}
     </main>
   );
 }
