@@ -9,15 +9,15 @@ Next.js (App Router, TypeScript) + Supabase + деплой на Vercel.
 **ВАЖНО:** перед любой работой с базой в будущих шагах сначала осмотри существующие таблицы и RLS (только чтение). Ничего не пересоздавай. Изменения схемы только миграциями в `supabase/migrations`.
 
 ## Модель данных
-Фактическая схема по осмотру базы 2026-11-05 (миграции `practicum_schema_v1`, `replace_sort_filter_with_functions`, `students_personal_code`). Число строк указано до приёмки шага 3.
+Фактическая схема по осмотру базы 2026-11-05 (миграции `practicum_schema_v1`, `replace_sort_filter_with_functions`, `students_personal_code`, `classes_study_group`). Число строк указано без тестовых данных приёмки.
 
 | Таблица | Строк | Колонки |
 |---|---|---|
-| `classes` | 0 | `id`, `code` (unique), `label`, `active`, `created_at` |
+| `classes` | 0 | `id`, `code` (unique), `label`, `active`, `created_at`, `study_group` (NOT NULL, без значения по умолчанию: `experimental` / `control`) |
 | `students` | 0 | `id`, `class_id`, `number` (> 0), `created_at`, `personal_code` (NOT NULL, 5 знаков `A–Z`, `0–9`, unique внутри класса) |
 | `datasets` | 4 | `id`, `key` (unique), `label`, `name`, `source_url`, `snapshot_date`, `data` (jsonb) |
 | `tasks` | 10 | `id`, `order_no` (unique), `skill` (read / calc / functions / conclude), `dataset_id`, `statement_kk`, `answer_type` (number / choice / text), `correct_value`, `tolerance`, `options`, `correct_option`, `rubric` |
-| `attempts` | 0 | `id`, `student_id`, `task_id`, `answer_raw`, `is_correct`, `time_spent_ms`, `created_at` |
+| `attempts` | 0 | `id`, `student_id`, `task_id`, `answer_raw`, `is_correct` (может быть null), `time_spent_ms`, `created_at`; индекс `(student_id, task_id)` |
 | `text_scores` | 0 | `attempt_id` (PK), `score` (0–2), `scored_at` |
 
 Представление `tasks_public` (`security_invoker=true`): `id`, `order_no`, `skill`, `dataset_id`, `statement_kk`, `answer_type`, `options`. Колонок с эталонами в нём нет.
@@ -25,11 +25,21 @@ Next.js (App Router, TypeScript) + Supabase + деплой на Vercel.
 Доступ: RLS включён на всех таблицах, политик нет. У `anon` и `authenticated` нет прав ни на одну таблицу и ни на `tasks_public`; права есть только у `service_role`. Функций в схеме `public` нет. Поэтому приложение читает базу только на сервере ключом `SUPABASE_SERVICE_ROLE_KEY`.
 
 Чего нет в базе, хотя планировалось в черновике:
-- **Классы**: группа (экспериментальная / контрольная).
 - **Ученики**: статус (активен / исключён), причина.
 - **Задачи**: отдельные поля названия и сцены, текст на русском; есть только `statement_kk`.
 - **Попытки**: класс, группа, номер попытки, вердикт. Вердикт `correct` или `incorrect` хранится в `is_correct`, время в `time_spent_ms`.
 - **Тесты** и **ответы на тесты**: таблиц нет.
+
+## Состояние ученика на главной
+Читает `lib/home.ts` на сервере по id ученика из cookie. Из `attempts` выбираются только `task_id` и `is_correct`, `answer_raw` не выбирается. В браузер не уходят id ученика и ответы.
+
+- **Контрольный класс**: `classes.study_group = 'control'`, независимо от попыток. Сообщение, что задания откроет учитель, без пути, прогресса и ссылок на задачи. Страницы `/tasks/[orderNo]` для него пока открыты, закрытие — шаг 6.
+- **Первый вход**: экспериментальный класс, в `attempts` нет строк ученика. Приветствие, ссылка на задачу 1, путь, без прогресс-бара.
+- **Повторный вход**: экспериментальный класс, есть хотя бы одна строка в `attempts`. Прогресс, ссылка на следующую задачу, путь.
+- **Решённая задача**: есть попытка этого ученика с `is_correct = true`.
+- **Прогресс**: решённые задачи из общего числа задач. Задачи 4 и 8 до шага 5 входят в общее число и решёнными быть не могут.
+- **Следующая задача**: наименьший номер среди нерешённых нетекстовых задач. Если таких нет, вместо ссылки нейтральное сообщение.
+- **Сбой чтения**: ошибка базы или подписанная cookie ученика, которого нет в базе, дают сообщение об ошибке, а не вариант «первый вход».
 
 ## API
 - `POST /api/answer` — серверная проверка ответа (`app/api/answer/route.ts`, логика в `lib/answers.ts`).

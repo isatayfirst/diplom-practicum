@@ -9,11 +9,11 @@ export type TaskListItem = {
   order_no: number;
   skill: TaskSkill;
   statement_kk: string;
+  answer_type: AnswerType;
 };
 
 export type TaskDetail = TaskListItem & {
   dataset_id: string | null;
-  answer_type: AnswerType;
   options: string[] | null;
 };
 
@@ -43,7 +43,7 @@ export function createServerClient() {
 export async function getTasks(): Promise<TaskListItem[]> {
   const { data, error } = await createServerClient()
     .from("tasks_public")
-    .select("id, order_no, skill, statement_kk")
+    .select("id, order_no, skill, statement_kk, answer_type")
     .order("order_no")
     .returns<TaskListItem[]>();
 
