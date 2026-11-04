@@ -3,6 +3,8 @@ import { createServerClient, type AnswerType } from "@/lib/tasks";
 
 export type Verdict = "correct" | "incorrect" | "invalid_format" | "teacher";
 
+export const MAX_TEXT_LENGTH = 2000;
+
 type AnswerKey = {
   id: string;
   answer_type: AnswerType;
@@ -30,13 +32,27 @@ type Attempt = {
   student_id: string;
   task_id: string;
   answer_raw: string;
-  is_correct: boolean;
+  // null: вывод, его оценивает учитель.
+  is_correct: boolean | null;
   time_spent_ms: number | null;
 };
 
 export async function recordAttempt(attempt: Attempt): Promise<void> {
   const { error } = await createServerClient().from("attempts").insert(attempt);
   if (error) throw new Error(`attempts: ${error.code}`);
+}
+
+// Только да или нет: текст вывода в страницу задачи не попадает.
+export async function hasSubmittedText(studentId: string, taskId: string): Promise<boolean> {
+  const { count, error } = await createServerClient()
+    .from("attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("student_id", studentId)
+    .eq("task_id", taskId)
+    .is("is_correct", null);
+
+  if (error) throw new Error(`attempts: ${error.code}`);
+  return (count ?? 0) > 0;
 }
 
 function parseNumber(answer: string): number | null {
@@ -50,7 +66,8 @@ export function checkAnswer(key: AnswerKey, answer: unknown): Verdict {
   if (typeof answer !== "string") return "invalid_format";
 
   if (key.answer_type === "text") {
-    return answer.trim() === "" ? "invalid_format" : "teacher";
+    const valid = answer.trim() !== "" && answer.length <= MAX_TEXT_LENGTH;
+    return valid ? "teacher" : "invalid_format";
   }
 
   if (key.answer_type === "choice") {

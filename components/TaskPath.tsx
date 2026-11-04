@@ -12,6 +12,15 @@ function CheckIcon() {
   );
 }
 
+function PendingIcon() {
+  return (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
 export default function TaskPath({ tasks, nextOrderNo }: TaskPathProps) {
   return (
     <section className="path-section" aria-labelledby="path-title">
@@ -19,13 +28,13 @@ export default function TaskPath({ tasks, nextOrderNo }: TaskPathProps) {
       <ol className="task-path">
         {tasks.map((task) => {
           const isNext = task.order_no === nextOrderNo;
-          const state = task.solved ? "solved" : isNext ? "next" : "open";
+          const state = task.solved ? "solved" : task.pending ? "pending" : isNext ? "next" : "open";
           const statusId = `task-status-${task.order_no}`;
 
           return (
             <li key={task.order_no} className={`task-step task-step-${state}`}>
               <span className="task-marker" aria-hidden="true">
-                {task.solved ? <CheckIcon /> : task.order_no}
+                {task.solved ? <CheckIcon /> : task.pending ? <PendingIcon /> : task.order_no}
               </span>
               <article className="task-card">
                 <div className="task-meta">

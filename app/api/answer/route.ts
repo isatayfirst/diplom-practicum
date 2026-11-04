@@ -33,13 +33,13 @@ export async function POST(request: Request) {
     if (!key) return Response.json({ error: "not_found" }, { status: 404 });
 
     const verdict = checkAnswer(key, answer);
-    if (verdict === "correct" || verdict === "incorrect") {
+    if (verdict !== "invalid_format") {
       // Если запись не удалась, ошибка уходит в catch и вердикт не показывается.
       await recordAttempt({
         student_id: studentId,
         task_id: key.id,
         answer_raw: String(answer),
-        is_correct: verdict === "correct",
+        is_correct: verdict === "teacher" ? null : verdict === "correct",
         time_spent_ms: parseTimeSpent(timeSpentMs),
       });
     }

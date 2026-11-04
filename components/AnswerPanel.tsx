@@ -21,6 +21,8 @@ type AnswerPanelProps = {
   orderNo: number;
   answerType: AnswerType;
   options: string[];
+  textSent: boolean;
+  textMaxLength: number;
 };
 
 const REQUEST_TIMEOUT_MS = 15000;
@@ -45,15 +47,23 @@ const statusIcon: Record<Exclude<Status, "idle">, string> = {
 
 function statusMessage(status: Exclude<Status, "idle">, answerType: AnswerType): string {
   if (status === "invalid_format") return t(invalidMessage[answerType]);
+  if (status === "checking" && answerType === "text") return t("answer.sending");
   return t(`answer.${status}`);
 }
 
-export default function AnswerPanel({ orderNo, answerType, options }: AnswerPanelProps) {
+export default function AnswerPanel({
+  orderNo,
+  answerType,
+  options,
+  textSent,
+  textMaxLength,
+}: AnswerPanelProps) {
   const fieldId = useId();
   const hintId = useId();
   const statusId = useId();
   const [answer, setAnswer] = useState("");
   const [status, setStatus] = useState<Status>("idle");
+  const [sent, setSent] = useState(textSent);
   const lastRequest = useRef(0);
   const openedAt = useRef(0);
 
@@ -62,7 +72,9 @@ export default function AnswerPanel({ orderNo, answerType, options }: AnswerPane
   }, []);
 
   const invalid = status === "incorrect" || status === "invalid_format";
-  const describedBy = answerType === "number" ? `${hintId} ${statusId}` : statusId;
+  const describedBy = answerType === "choice" ? statusId : `${hintId} ${statusId}`;
+  // Отправленный вывод остаётся отмеченным, пока ученик пишет новый.
+  const shownStatus = status === "idle" && sent ? "teacher" : status;
 
   function changeAnswer(value: string) {
     // Вердикт относится к прежнему ответу, а запрос в пути уже не нужен.
@@ -104,7 +116,12 @@ export default function AnswerPanel({ orderNo, answerType, options }: AnswerPane
       next = "network";
     }
 
-    if (request === lastRequest.current) setStatus(next);
+    if (request !== lastRequest.current) return;
+    setStatus(next);
+    if (next === "teacher") {
+      setSent(true);
+      setAnswer("");
+    }
   }
 
   return (
@@ -163,23 +180,27 @@ export default function AnswerPanel({ orderNo, answerType, options }: AnswerPane
             id={fieldId}
             className="answer-field"
             rows={3}
+            maxLength={textMaxLength}
             value={answer}
             onChange={(event) => changeAnswer(event.target.value)}
             aria-invalid={invalid}
             aria-describedby={describedBy}
           />
+          <p id={hintId} className="answer-hint">
+            {t("answer.textHint", { max: textMaxLength })}
+          </p>
         </>
       )}
 
       <div id={statusId} role="status" className="answer-status-region">
-        {status !== "idle" && (
-          <p className={`answer-status answer-status-${status}`}>
+        {shownStatus !== "idle" && (
+          <p className={`answer-status answer-status-${shownStatus}`}>
             <span aria-hidden="true" className="answer-status-icon">
-              {statusIcon[status]}
+              {statusIcon[shownStatus]}
             </span>
             <span>
-              {statusMessage(status, answerType)}
-              {status === "unauthorized" && (
+              {statusMessage(shownStatus, answerType)}
+              {shownStatus === "unauthorized" && (
                 <>
                   {" "}
                   <Link href="/login">{t("answer.loginLink")}</Link>
@@ -191,7 +212,7 @@ export default function AnswerPanel({ orderNo, answerType, options }: AnswerPane
       </div>
 
       <button type="submit" className="answer-submit" aria-disabled={status === "checking"}>
-        {t("answer.submit")}
+        {t(answerType === "text" ? "answer.submitText" : "answer.submit")}
       </button>
     </form>
   );

@@ -4,13 +4,14 @@ import { useId, useState } from "react";
 import { t } from "@/lib/messages";
 
 type DataTableProps = {
+  id: string;
   caption: string;
   columns: string[];
   rows: string[][];
 };
 
 // Отметки помогают ученику не сбиться в строках. Они живут только в браузере.
-export default function DataTable({ caption, columns, rows }: DataTableProps) {
+export default function DataTable({ id, caption, columns, rows }: DataTableProps) {
   const captionId = useId();
   const [marked, setMarked] = useState<ReadonlySet<number>>(new Set());
 
@@ -26,7 +27,7 @@ export default function DataTable({ caption, columns, rows }: DataTableProps) {
     <section className="data-table">
       <h2 id={captionId}>{caption}</h2>
       <p className="table-hint">{t("task.tableHint")}</p>
-      <div className="table-scroll" role="region" aria-labelledby={captionId} tabIndex={0}>
+      <div id={id} className="table-scroll" role="region" aria-labelledby={captionId} tabIndex={0}>
         <table>
           <thead>
             <tr>
