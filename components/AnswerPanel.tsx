@@ -1,10 +1,21 @@
 "use client";
 
-import { useId, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { t, type MessageKey } from "@/lib/messages";
 
 type AnswerType = "number" | "choice" | "text";
-type Status = "idle" | "checking" | "correct" | "incorrect" | "invalid_format" | "teacher" | "network";
+type Status =
+  | "idle"
+  | "checking"
+  | "correct"
+  | "incorrect"
+  | "invalid_format"
+  | "teacher"
+  | "network"
+  | "server"
+  | "unauthorized"
+  | "rateLimited";
 
 type AnswerPanelProps = {
   orderNo: number;
@@ -27,6 +38,9 @@ const statusIcon: Record<Exclude<Status, "idle">, string> = {
   invalid_format: "!",
   teacher: "✎",
   network: "!",
+  server: "!",
+  unauthorized: "!",
+  rateLimited: "…",
 };
 
 function statusMessage(status: Exclude<Status, "idle">, answerType: AnswerType): string {
@@ -41,6 +55,11 @@ export default function AnswerPanel({ orderNo, answerType, options }: AnswerPane
   const [answer, setAnswer] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const lastRequest = useRef(0);
+  const openedAt = useRef(0);
+
+  useEffect(() => {
+    openedAt.current = performance.now();
+  }, []);
 
   const invalid = status === "incorrect" || status === "invalid_format";
   const describedBy = answerType === "number" ? `${hintId} ${statusId}` : statusId;
@@ -64,12 +83,22 @@ export default function AnswerPanel({ orderNo, answerType, options }: AnswerPane
       const response = await fetch("/api/answer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderNo, answer }),
+        body: JSON.stringify({
+          orderNo,
+          answer,
+          timeSpentMs: Math.round(performance.now() - openedAt.current),
+        }),
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
       if (response.ok) {
         const { verdict } = (await response.json()) as { verdict: Status };
         next = verdict;
+      } else if (response.status === 401) {
+        next = "unauthorized";
+      } else if (response.status === 429) {
+        next = "rateLimited";
+      } else if (response.status >= 500) {
+        next = "server";
       }
     } catch {
       next = "network";
@@ -148,7 +177,15 @@ export default function AnswerPanel({ orderNo, answerType, options }: AnswerPane
             <span aria-hidden="true" className="answer-status-icon">
               {statusIcon[status]}
             </span>
-            {statusMessage(status, answerType)}
+            <span>
+              {statusMessage(status, answerType)}
+              {status === "unauthorized" && (
+                <>
+                  {" "}
+                  <Link href="/login">{t("answer.loginLink")}</Link>
+                </>
+              )}
+            </span>
           </p>
         )}
       </div>
