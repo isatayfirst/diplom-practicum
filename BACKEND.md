@@ -9,12 +9,12 @@ Next.js (App Router, TypeScript) + Supabase + деплой на Vercel.
 **ВАЖНО:** перед любой работой с базой в будущих шагах сначала осмотри существующие таблицы и RLS (только чтение). Ничего не пересоздавай. Изменения схемы только миграциями в `supabase/migrations`.
 
 ## Модель данных
-Фактическая схема по осмотру базы 2026-11-04 (миграции `practicum_schema_v1`, `replace_sort_filter_with_functions`).
+Фактическая схема по осмотру базы 2026-11-05 (миграции `practicum_schema_v1`, `replace_sort_filter_with_functions`, `students_personal_code`). Число строк указано до приёмки шага 3.
 
 | Таблица | Строк | Колонки |
 |---|---|---|
 | `classes` | 0 | `id`, `code` (unique), `label`, `active`, `created_at` |
-| `students` | 0 | `id`, `class_id`, `number` (> 0), `created_at` |
+| `students` | 0 | `id`, `class_id`, `number` (> 0), `created_at`, `personal_code` (NOT NULL, 5 знаков `A–Z`, `0–9`, unique внутри класса) |
 | `datasets` | 4 | `id`, `key` (unique), `label`, `name`, `source_url`, `snapshot_date`, `data` (jsonb) |
 | `tasks` | 10 | `id`, `order_no` (unique), `skill` (read / calc / functions / conclude), `dataset_id`, `statement_kk`, `answer_type` (number / choice / text), `correct_value`, `tolerance`, `options`, `correct_option`, `rubric` |
 | `attempts` | 0 | `id`, `student_id`, `task_id`, `answer_raw`, `is_correct`, `time_spent_ms`, `created_at` |
@@ -26,26 +26,36 @@ Next.js (App Router, TypeScript) + Supabase + деплой на Vercel.
 
 Чего нет в базе, хотя планировалось в черновике:
 - **Классы**: группа (экспериментальная / контрольная).
-- **Ученики**: личный код, статус (активен / исключён), причина; есть только `number`.
+- **Ученики**: статус (активен / исключён), причина.
 - **Задачи**: отдельные поля названия и сцены, текст на русском; есть только `statement_kk`.
-- **Попытки**: класс, группа, номер попытки, вердикт; есть `is_correct`, время в миллисекундах.
+- **Попытки**: класс, группа, номер попытки, вердикт. Вердикт `correct` или `incorrect` хранится в `is_correct`, время в `time_spent_ms`.
 - **Тесты** и **ответы на тесты**: таблиц нет.
 
 ## API
 - `POST /api/answer` — серверная проверка ответа (`app/api/answer/route.ts`, логика в `lib/answers.ts`).
-  - Запрос: JSON `{ "orderNo": 1, "answer": "строка" }`. `orderNo` — целое число, `answer` — строка.
+  - Нужна сессия. Без неё или с подделанной и просроченной cookie: 401 `{ "error": "unauthorized" }`.
+  - Запрос: JSON `{ "orderNo": 1, "answer": "строка", "timeSpentMs": 1500 }`. `orderNo` — целое число, `answer` — строка, `timeSpentMs` — время от открытия страницы до отправки.
   - Ответ 200: только `{ "verdict": "..." }`. Вердикты: `correct`, `incorrect`, `invalid_format`, `teacher`.
-  - Ошибки: 400 `{ "error": "bad_request" }` (не JSON или неверный `orderNo`), 404 `{ "error": "not_found" }` (нет задачи), 500 `{ "error": "server_error" }`.
+  - Ошибки: 400 `{ "error": "bad_request" }` (не JSON или неверный `orderNo`), 404 `{ "error": "not_found" }` (нет задачи), 429 `{ "error": "rate_limited" }`, 500 `{ "error": "server_error" }`.
   - `number`: десятичный разделитель — запятая или точка; верно, если |ответ − эталон| ≤ `tolerance`, при пустом `tolerance` нужно точное равенство. Не число или пустая строка дают `invalid_format`. Пробелы внутри числа и запись вида `1e3` числом не считаются.
   - `choice`: значение не из `options` даёт `invalid_format`.
   - `text`: вердикт `teacher`, ответ не сохраняется (хранение выводов — шаг 5). Пустой текст даёт `invalid_format`.
   - Ответ API никогда не содержит эталон, допуск или рубрику.
   - `invalid_format` не считается неверной попыткой.
-  - Пока не сделано (шаг 3): проверка сессии, запись попытки, лимит 30 попыток в минуту.
+  - Запись попытки: `correct` и `incorrect` пишутся в `attempts`, `student_id` берётся только из cookie. `invalid_format` и `teacher` не пишутся. Если запись не удалась, ответ 500 без вердикта.
+  - `time_spent_ms`: принимается целое от 0 до 86 400 000 (сутки), иначе пишется `null`.
+  - Лимит: 30 запросов за скользящую минуту на ученика, считаются все запросы с сессией, включая `invalid_format`. Счётчик в памяти процесса (`lib/rate-limit.ts`), на Vercel у каждого экземпляра свой.
+- `POST /api/login` — вход ученика (`app/api/login/route.ts`, поиск в `lib/students.ts`).
+  - Запрос: JSON `{ "classCode": "...", "personalCode": "..." }`.
+  - Ответ 200: `{ "ok": true }` и cookie сессии.
+  - Ошибки: 401 `{ "error": "invalid_credentials" }`, один и тот же ответ для неверного класса, неверного кода и неактивного класса; 500 `{ "error": "server_error" }`.
+  - Лимита попыток входа нет.
 
 ## Вход
-- Ученик: класс + личный код, подписанный httpOnly cookie.
-- Личные коды генерирует сайт, учитель печатает лист.
+- Ученик: страница `/login`, код класса и личный код. Код класса сравнивается точно, личный код приводится к заглавным буквам.
+- Сессия (`lib/session.ts`): cookie `session` вида `id.срок.подпись`, HMAC-SHA256 на `node:crypto`, ключ `SESSION_SECRET`. HttpOnly, SameSite=Lax, Secure в продакшене, срок 8 часов. Подделанная или просроченная cookie считается отсутствующей.
+- Защита (`proxy.ts`): без сессии открыта только `/login`, всё остальное ведёт на неё. С сессией `/login` ведёт на `/`. Маршруты `/api` проверяют сессию сами. Страницы, которым вход не нужен (например `/teacher` на шаге 7), надо явно добавить в `proxy.ts`.
+- Личные коды генерирует сайт, учитель печатает лист (шаг 7). Хранятся открытым текстом в `students.personal_code`, чтобы их можно было показать; браузер к базе не обращается.
 - Учитель: `/teacher`, один секретный код из `TEACHER_SECRET_CODE`, без учётных записей.
 
 ## Экспорт CSV

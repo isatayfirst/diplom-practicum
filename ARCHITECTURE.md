@@ -52,7 +52,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-В `.env.local` заполните `NEXT_PUBLIC_SUPABASE_URL` и `SUPABASE_SERVICE_ROLE_KEY`, каждое значение одной строкой. Сайт откроется на http://localhost:3000.
+В `.env.local` заполните `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` и `SESSION_SECRET`, каждое значение одной строкой. Сайт откроется на http://localhost:3000.
 
 Проверка и продакшен-сборка:
 

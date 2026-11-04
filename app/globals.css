@@ -412,14 +412,45 @@ textarea.answer-field {
 }
 
 .answer-status-incorrect,
-.answer-status-network {
+.answer-status-network,
+.answer-status-server,
+.login-status-invalid,
+.login-status-server,
+.login-status-network {
   background: var(--color-error-bg);
   color: var(--color-error-text);
 }
 
-.answer-status-invalid_format {
+.answer-status-invalid_format,
+.answer-status-unauthorized,
+.answer-status-rateLimited {
   background: var(--color-hint-bg);
   color: var(--color-hint-text);
+}
+
+.answer-status a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  font-weight: 600;
+}
+
+.login-page {
+  max-width: 440px;
+}
+
+.login-form {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.login-form .answer-hint + .answer-status-region,
+.login-form .answer-field + .answer-label {
+  margin-top: 8px;
 }
 
 .answer-submit {

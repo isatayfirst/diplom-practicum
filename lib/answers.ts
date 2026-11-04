@@ -4,6 +4,7 @@ import { createServerClient, type AnswerType } from "@/lib/tasks";
 export type Verdict = "correct" | "incorrect" | "invalid_format" | "teacher";
 
 type AnswerKey = {
+  id: string;
   answer_type: AnswerType;
   options: string[] | null;
   correct_value: number | null;
@@ -15,7 +16,7 @@ type AnswerKey = {
 export async function getAnswerKey(orderNo: number): Promise<AnswerKey | null> {
   const { data, error } = await createServerClient()
     .from("tasks")
-    .select("answer_type, options, correct_value, tolerance, correct_option")
+    .select("id, answer_type, options, correct_value, tolerance, correct_option")
     .eq("order_no", orderNo)
     .returns<AnswerKey[]>()
     .maybeSingle();
@@ -23,6 +24,19 @@ export async function getAnswerKey(orderNo: number): Promise<AnswerKey | null> {
   // В сообщение идёт только код ошибки: текст базы может цитировать данные запроса.
   if (error) throw new Error(`tasks: ${error.code}`);
   return data;
+}
+
+type Attempt = {
+  student_id: string;
+  task_id: string;
+  answer_raw: string;
+  is_correct: boolean;
+  time_spent_ms: number | null;
+};
+
+export async function recordAttempt(attempt: Attempt): Promise<void> {
+  const { error } = await createServerClient().from("attempts").insert(attempt);
+  if (error) throw new Error(`attempts: ${error.code}`);
 }
 
 function parseNumber(answer: string): number | null {
