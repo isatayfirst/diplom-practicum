@@ -1,32 +1,18 @@
 import "server-only";
 import { createServerClient, getTasks, type TaskListItem } from "@/lib/tasks";
-
-type StudyGroup = "experimental" | "control";
+import { getStudentClass, getTestSummaries, type TestSummary } from "@/lib/tests";
 
 export type PathTask = TaskListItem & { solved: boolean; pending: boolean };
 
 export type HomeState =
-  | { variant: "control" }
+  | { variant: "control"; tests: TestSummary[] }
   | {
       variant: "first" | "returning";
       tasks: PathTask[];
       solvedCount: number;
       nextOrderNo: number | null;
+      tests: TestSummary[];
     };
-
-async function getStudyGroup(studentId: string): Promise<StudyGroup> {
-  const { data, error } = await createServerClient()
-    .from("students")
-    .select("classes!inner(study_group)")
-    .eq("id", studentId)
-    .returns<{ classes: { study_group: StudyGroup } }[]>()
-    .maybeSingle();
-
-  if (error) throw new Error(`students: ${error.code}`);
-  // Подписанная cookie есть, а ученика нет: это сбой, а не «первый вход».
-  if (!data) throw new Error("students: not found");
-  return data.classes.study_group;
-}
 
 async function getAttempts(studentId: string) {
   // answer_raw сюда не выбираем. Верные попытки идут первыми: если ответ базы
@@ -42,9 +28,17 @@ async function getAttempts(studentId: string) {
 }
 
 export async function getHomeState(studentId: string): Promise<HomeState> {
-  if ((await getStudyGroup(studentId)) === "control") return { variant: "control" };
+  const { classId, studyGroup } = await getStudentClass(studentId);
+  // Контрольный класс видит только тесты: задач, пути и прогресса для него нет.
+  if (studyGroup === "control") {
+    return { variant: "control", tests: await getTestSummaries(studentId, classId) };
+  }
 
-  const [tasks, attempts] = await Promise.all([getTasks(), getAttempts(studentId)]);
+  const [tasks, attempts, tests] = await Promise.all([
+    getTasks(),
+    getAttempts(studentId),
+    getTestSummaries(studentId, classId),
+  ]);
   const solvedIds = new Set(attempts.filter((a) => a.is_correct === true).map((a) => a.task_id));
   // Вывод: строка с is_correct = null. Оценки появятся на шаге 7, до тех пор вывод ждёт проверки.
   const sentIds = new Set(attempts.filter((a) => a.is_correct === null).map((a) => a.task_id));
@@ -59,5 +53,6 @@ export async function getHomeState(studentId: string): Promise<HomeState> {
     tasks: path,
     solvedCount: path.filter((task) => task.solved).length,
     nextOrderNo: path.find((task) => !task.solved && !task.pending)?.order_no ?? null,
+    tests,
   };
 }

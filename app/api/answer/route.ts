@@ -3,6 +3,7 @@ import { checkAnswer, getAnswerKey, recordAttempt } from "@/lib/answers";
 import { allowRequest } from "@/lib/rate-limit";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
 import { isOrderNo } from "@/lib/tasks";
+import { getStudentClass } from "@/lib/tests";
 
 const MAX_TIME_SPENT_MS = 24 * 60 * 60 * 1000;
 
@@ -17,6 +18,11 @@ export async function POST(request: Request) {
     const studentId = readSession((await cookies()).get(SESSION_COOKIE)?.value);
     if (!studentId) return Response.json({ error: "unauthorized" }, { status: 401 });
     if (!allowRequest(studentId)) return Response.json({ error: "rate_limited" }, { status: 429 });
+
+    // Контрольному классу задачи недоступны: класс берётся из базы, ничего не пишется.
+    if ((await getStudentClass(studentId)).studyGroup === "control") {
+      return Response.json({ error: "forbidden" }, { status: 403 });
+    }
 
     const body: unknown = await request.json().catch(() => null);
     const { orderNo, answer, timeSpentMs } = (body ?? {}) as {

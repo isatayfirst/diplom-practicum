@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar";
 import RefreshOnReturn from "@/components/RefreshOnReturn";
 import TaskPath from "@/components/TaskPath";
+import TestList from "@/components/TestList";
 import { getHomeState, type HomeState } from "@/lib/home";
 import { t } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
@@ -41,15 +42,21 @@ export default async function HomePage() {
   if (state.variant === "control") {
     return (
       <main id="content" tabIndex={-1} className="page">
+        <RefreshOnReturn />
         <header className="page-header">
           <h1>{t("home.welcome")}</h1>
+          <p className="lead">{t("home.controlLead")}</p>
         </header>
-        <p className="notice">{t("home.control")}</p>
+        {state.tests.length > 0 ? (
+          <TestList tests={state.tests} />
+        ) : (
+          <p className="notice">{t("tests.empty")}</p>
+        )}
       </main>
     );
   }
 
-  const { variant, tasks, solvedCount, nextOrderNo } = state;
+  const { variant, tasks, solvedCount, nextOrderNo, tests } = state;
   const first = variant === "first";
 
   return (
@@ -75,6 +82,8 @@ export default async function HomePage() {
       ) : (
         <p className="notice">{t(tasks.length > 0 ? "home.noNext" : "home.empty")}</p>
       )}
+
+      {tests.length > 0 && <TestList tests={tests} />}
 
       {tasks.length > 0 && <TaskPath tasks={tasks} nextOrderNo={nextOrderNo} />}
     </main>

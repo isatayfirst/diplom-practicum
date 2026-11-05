@@ -9,6 +9,7 @@ import { hasSubmittedText, MAX_TEXT_LENGTH } from "@/lib/answers";
 import { t } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
 import { getDataset, getTask, isOrderNo, type Dataset, type TaskDetail } from "@/lib/tasks";
+import { getStudentClass } from "@/lib/tests";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,10 @@ type LoadResult = { task: TaskDetail | null; dataset: Dataset | null; textSent: 
 
 async function loadTask(orderNo: number, studentId: string): Promise<LoadResult | null> {
   try {
+    // Контрольному классу задачи недоступны: страница отвечает как для несуществующей задачи.
+    if ((await getStudentClass(studentId)).studyGroup === "control") {
+      return { task: null, dataset: null, textSent: false };
+    }
     const task = await getTask(orderNo);
     const dataset = task?.dataset_id ? await getDataset(task.dataset_id) : null;
     const textSent = task?.answer_type === "text" && (await hasSubmittedText(studentId, task.id));
