@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { checkAnswer, getAnswerKey, recordAttempt } from "@/lib/answers";
 import { allowRequest } from "@/lib/rate-limit";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
+import { InactiveStudentError } from "@/lib/students";
 import { isOrderNo } from "@/lib/tasks";
 import { getStudentClass } from "@/lib/tests";
 
@@ -52,6 +53,9 @@ export async function POST(request: Request) {
 
     return Response.json({ verdict });
   } catch (error) {
+    if (error instanceof InactiveStudentError) {
+      return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
     console.error(error);
     return Response.json({ error: "server_error" }, { status: 500 });
   }

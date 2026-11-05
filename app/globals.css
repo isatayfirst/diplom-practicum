@@ -179,7 +179,8 @@ h3 {
   background: var(--color-path-line);
 }
 
-.task-step-solved:not(:last-child)::before {
+.task-step-solved:not(:last-child)::before,
+.task-step-scored:not(:last-child)::before {
   background: var(--color-accent);
 }
 
@@ -215,7 +216,8 @@ h3 {
   font-weight: 600;
 }
 
-.task-step-solved .task-status {
+.task-step-solved .task-status,
+.task-step-scored .task-status {
   background: var(--color-success-bg);
   color: var(--color-success-text);
 }

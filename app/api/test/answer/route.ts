@@ -1,3 +1,4 @@
+import { InactiveStudentError } from "@/lib/students";
 import { prepareTestRequest } from "@/lib/test-api";
 import { saveTestAnswer } from "@/lib/tests";
 
@@ -30,6 +31,9 @@ export async function POST(request: Request) {
     });
     return Response.json({ ok: true });
   } catch (error) {
+    if (error instanceof InactiveStudentError) {
+      return Response.json({ error: "unauthorized" }, { status: 401 });
+    }
     console.error(error);
     return Response.json({ error: "server_error" }, { status: 500 });
   }

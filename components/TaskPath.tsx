@@ -28,13 +28,13 @@ export default function TaskPath({ tasks, nextOrderNo }: TaskPathProps) {
       <ol className="task-path">
         {tasks.map((task) => {
           const isNext = task.order_no === nextOrderNo;
-          const state = task.solved ? "solved" : task.pending ? "pending" : isNext ? "next" : "open";
+          const state = task.solved ? "solved" : task.scored ? "scored" : task.pending ? "pending" : isNext ? "next" : "open";
           const statusId = `task-status-${task.order_no}`;
 
           return (
             <li key={task.order_no} className={`task-step task-step-${state}`}>
               <span className="task-marker" aria-hidden="true">
-                {task.solved ? <CheckIcon /> : task.pending ? <PendingIcon /> : task.order_no}
+                {task.solved || task.scored ? <CheckIcon /> : task.pending ? <PendingIcon /> : task.order_no}
               </span>
               <article className="task-card">
                 <div className="task-meta">

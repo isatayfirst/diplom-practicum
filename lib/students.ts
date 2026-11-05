@@ -3,7 +3,17 @@ import { createServerClient } from "@/lib/tasks";
 
 const MAX_CLASS_CODE_LENGTH = 64;
 
-// Неверный класс, неверный код и неактивный класс неразличимы: во всех случаях null.
+// Ученик исключён из анализа: его cookie больше ничего не открывает.
+// Страница исключённого ученика ведёт сюда: маршрут стирает cookie и открывает /login.
+export const SESSION_END_PATH = "/api/session-end";
+
+export class InactiveStudentError extends Error {
+  constructor() {
+    super("student is not active");
+  }
+}
+
+// Неверный класс, неверный код, неактивный класс и исключённый ученик неразличимы: во всех случаях null.
 export async function findStudentId(classCode: unknown, personalCode: unknown): Promise<string | null> {
   if (typeof classCode !== "string" || typeof personalCode !== "string") return null;
 
@@ -17,6 +27,7 @@ export async function findStudentId(classCode: unknown, personalCode: unknown): 
     .eq("personal_code", personal)
     .eq("classes.code", code)
     .eq("classes.active", true)
+    .eq("status", "active")
     .maybeSingle();
 
   // В сообщение идёт только код ошибки: текст базы может цитировать данные запроса.

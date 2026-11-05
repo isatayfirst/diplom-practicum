@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import TestRunner from "@/components/TestRunner";
 import { t } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
+import { InactiveStudentError, SESSION_END_PATH } from "@/lib/students";
 import { getStudentClass, getTestState, isTestKind, type TestState } from "@/lib/tests";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ async function loadTest(studentId: string, kind: "pretest" | "posttest") {
     const { classId } = await getStudentClass(studentId);
     return (await getTestState(studentId, classId, kind)) ?? undefined;
   } catch (error) {
+    if (error instanceof InactiveStudentError) redirect(SESSION_END_PATH);
     console.error(error);
     return null;
   }
