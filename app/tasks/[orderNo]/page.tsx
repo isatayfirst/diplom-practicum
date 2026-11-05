@@ -4,9 +4,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import AnswerPanel from "@/components/AnswerPanel";
 import DataTable from "@/components/DataTable";
+import LangSwitch from "@/components/LangSwitch";
 import TaskChart from "@/components/TaskChart";
 import { hasSubmittedText, MAX_TEXT_LENGTH } from "@/lib/answers";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
 import { InactiveStudentError, SESSION_END_PATH } from "@/lib/students";
 import { getDataset, getTask, isOrderNo, type Dataset, type TaskDetail } from "@/lib/tasks";
@@ -44,10 +45,12 @@ async function loadTask(orderNo: number, studentId: string): Promise<LoadResult 
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const orderNo = parseOrderNo((await params).orderNo);
+  const t = await getT();
   return orderNo ? { title: t("home.taskNumber", { number: orderNo }) } : {};
 }
 
 export default async function TaskPage({ params }: PageProps) {
+  const t = await getT();
   const orderNo = parseOrderNo((await params).orderNo);
   if (orderNo === null) notFound();
 
@@ -62,9 +65,12 @@ export default async function TaskPage({ params }: PageProps) {
 
   return (
     <main id="content" tabIndex={-1} className="page task-page">
-      <Link className="back-link" href="/">
-        <span aria-hidden="true">←</span> {t("task.back")}
-      </Link>
+      <div className="page-top">
+        <Link className="back-link" href="/">
+          <span aria-hidden="true">←</span> {t("task.back")}
+        </Link>
+        <LangSwitch />
+      </div>
 
       {!task && (
         <p className="notice notice-error" role="alert">

@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
 import StudentsTable, { type StudentView } from "@/components/teacher/StudentsTable";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import { listClasses, loadClassData, MAX_CLASS_SIZE, requireTeacherPage, buildCells, type ClassInfo } from "@/lib/teacher";
+import type { TFn } from "@/lib/t";
 import { DASH, lastActivity, pickClass } from "@/lib/teacher-view";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: t("teacher.students.title") };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("teacher.students.title") };
+}
 
 type Loaded =
   | { kind: "none" }
   | { kind: "error" }
   | { kind: "ok"; cls: ClassInfo; students: StudentView[] };
 
-async function load(code: string | undefined): Promise<Loaded> {
+async function load(code: string | undefined, t: TFn): Promise<Loaded> {
   try {
     const cls = pickClass(await listClasses(), code);
     if (!cls) return { kind: "none" };
@@ -32,7 +35,7 @@ async function load(code: string | undefined): Promise<Loaded> {
         reason: student.reason,
         pretest: pre && score !== undefined ? t("teacher.ratio", { value: score, total: pre.questionCount }) : DASH,
         tasks: control ? null : t("teacher.ratio", { value: done, total: data.tasks.length }),
-        last: control ? null : lastActivity(mine),
+        last: control ? null : lastActivity(t, mine),
       };
     });
     return { kind: "ok", cls, students };
@@ -44,7 +47,8 @@ async function load(code: string | undefined): Promise<Loaded> {
 
 export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ class?: string }> }) {
   await requireTeacherPage();
-  const state = await load((await searchParams).class);
+  const t = await getT();
+  const state = await load((await searchParams).class, t);
 
   if (state.kind !== "ok") {
     return (
@@ -101,7 +105,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           <tbody>
             {active.map((student) => (
               <tr key={student.id}>
-                <th scope="row">№{student.number}</th>
+                <th scope="row">{t("common.studentNumber", { number: student.number })}</th>
                 <td className="t-code">{student.code}</td>
               </tr>
             ))}

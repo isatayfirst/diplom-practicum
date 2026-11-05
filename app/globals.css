@@ -926,3 +926,42 @@ textarea.answer-field {
     width: 200px;
   }
 }
+
+/* Верхняя строка страницы ученика: ссылка «назад» и переключатель языка. */
+.page-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.page-top .lang-switch {
+  margin-left: auto;
+}
+
+.lang-switch {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.lang-switch-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lang-switch-button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: #0a4f44;
+  font-weight: 700;
+}

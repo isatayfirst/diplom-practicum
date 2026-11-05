@@ -1,13 +1,23 @@
+import "server-only";
+import { cookies } from "next/headers";
 import kk from "@/messages/kk.json";
 import ru from "@/messages/ru.json";
+import { createT, LANG_COOKIE, parseLocale, type Locale, type MessageKey, type Messages, type TFn } from "@/lib/t";
 
-export const locale = "kk";
+export type { Locale, MessageKey, TFn } from "@/lib/t";
 
-export type MessageKey = keyof typeof ru;
+const kazakh: Partial<Record<MessageKey, string>> = kk;
 
-const primary: Partial<Record<MessageKey, string>> = kk;
+// Словарь языка целиком: фраза, которой нет в казахском, берётся из русского.
+export function dictionary(locale: Locale): Messages {
+  return locale === "kk" ? { ...ru, ...kazakh } : ru;
+}
 
-export function t(key: MessageKey, values: Record<string, string | number> = {}) {
-  const text = primary[key] ?? ru[key];
-  return text.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name]));
+// Язык запроса из cookie `lang`; неизвестное значение даёт казахский.
+export async function getLocale(): Promise<Locale> {
+  return parseLocale((await cookies()).get(LANG_COOKIE)?.value);
+}
+
+export async function getT(): Promise<TFn> {
+  return createT(dictionary(await getLocale()));
 }

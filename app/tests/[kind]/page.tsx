@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import LangSwitch from "@/components/LangSwitch";
 import TestRunner from "@/components/TestRunner";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
 import { InactiveStudentError, SESSION_END_PATH } from "@/lib/students";
 import { getStudentClass, getTestState, isTestKind, type TestState } from "@/lib/tests";
@@ -14,6 +15,7 @@ type PageProps = { params: Promise<{ kind: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { kind } = await params;
+  const t = await getT();
   return isTestKind(kind) ? { title: t(`tests.${kind}`) } : {};
 }
 
@@ -29,15 +31,19 @@ async function loadTest(studentId: string, kind: "pretest" | "posttest") {
   }
 }
 
-function BackLink() {
+function BackLink({ label }: { label: string }) {
   return (
-    <Link className="back-link" href="/">
-      <span aria-hidden="true">←</span> {t("tests.back")}
-    </Link>
+    <div className="page-top">
+      <Link className="back-link" href="/">
+        <span aria-hidden="true">←</span> {label}
+      </Link>
+      <LangSwitch />
+    </div>
   );
 }
 
 export default async function TestPage({ params }: PageProps) {
+  const t = await getT();
   const { kind } = await params;
   if (!isTestKind(kind)) notFound();
 
@@ -50,7 +56,7 @@ export default async function TestPage({ params }: PageProps) {
   if (state === null) {
     return (
       <main id="content" tabIndex={-1} className="page">
-        <BackLink />
+        <BackLink label={t("tests.back")} />
         <p className="notice notice-error" role="alert">
           {t("tests.error")}
         </p>
@@ -63,7 +69,7 @@ export default async function TestPage({ params }: PageProps) {
     const closed = state.status === "closed";
     return (
       <main id="content" tabIndex={-1} className="page">
-        <BackLink />
+        <BackLink label={t("tests.back")} />
         <section className="test-card">
           <h1 className="test-done-title">{t(closed ? "tests.closedTitle" : "tests.doneTitle")}</h1>
           <p>{t(closed ? "tests.closedBody" : "tests.doneBody")}</p>
@@ -88,7 +94,7 @@ export default async function TestPage({ params }: PageProps) {
 
   return (
     <main id="content" tabIndex={-1} className="page test-page">
-      <BackLink />
+      <BackLink label={t("tests.back")} />
       <TestRunner
         kind={kind}
         questions={questions}

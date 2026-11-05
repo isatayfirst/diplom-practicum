@@ -1,7 +1,8 @@
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
+import type { TFn } from "@/lib/t";
 import type { Cell, Overview } from "@/lib/teacher";
 
-function shortText(cell: Cell): string {
+function shortText(t: TFn, cell: Cell): string {
   switch (cell.state) {
     case "none":
       return t("teacher.cell.shortNone");
@@ -16,7 +17,7 @@ function shortText(cell: Cell): string {
   }
 }
 
-function wordText(cell: Cell): string {
+function wordText(t: TFn, cell: Cell): string {
   switch (cell.state) {
     case "none":
       return t("teacher.cell.none");
@@ -33,7 +34,8 @@ function wordText(cell: Cell): string {
 
 // Карта: цветная таблица для глаз и та же таблица словами для чтения с экрана.
 // Цвет не единственный признак: в цветной ячейке есть знак, в текстовой версии слова.
-export default function HeatMap({ overview }: { overview: Overview }) {
+export default async function HeatMap({ overview }: { overview: Overview }) {
+  const t = await getT();
   const total = overview.orderNos.length;
   return (
     <section className="t-heat" aria-labelledby="heat-title">
@@ -55,10 +57,10 @@ export default function HeatMap({ overview }: { overview: Overview }) {
           <tbody>
             {overview.rows.map((row) => (
               <tr key={row.number}>
-                <th scope="row">№{row.number}</th>
+                <th scope="row">{t("common.studentNumber", { number: row.number })}</th>
                 {row.cells.map((cell, index) => (
                   <td key={overview.orderNos[index]} className={`t-cell t-cell-${cell.state}`}>
-                    {shortText(cell)}
+                    {shortText(t, cell)}
                   </td>
                 ))}
                 <td className="t-num">{t("teacher.ratio", { value: row.done, total })}</td>
@@ -96,7 +98,7 @@ export default function HeatMap({ overview }: { overview: Overview }) {
             <tbody>
               {overview.rows.map((row) => (
                 <tr key={row.number} data-student-number={row.number}>
-                  <th scope="row">№{row.number}</th>
+                  <th scope="row">{t("common.studentNumber", { number: row.number })}</th>
                   {row.cells.map((cell, index) => (
                     <td
                       key={overview.orderNos[index]}
@@ -104,7 +106,7 @@ export default function HeatMap({ overview }: { overview: Overview }) {
                       data-attempts={cell.attempts}
                       data-score={cell.score ?? ""}
                     >
-                      {wordText(cell)}
+                      {wordText(t, cell)}
                     </td>
                   ))}
                   <td data-done={row.done}>{t("teacher.ratio", { value: row.done, total })}</td>
