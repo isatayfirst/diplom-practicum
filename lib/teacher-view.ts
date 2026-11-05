@@ -1,7 +1,7 @@
 import "server-only";
-import { t } from "@/lib/messages";
 import type { ClassData, ClassInfo } from "@/lib/teacher";
 import type { TestKind } from "@/lib/tests";
+import type { TFn } from "@/lib/t";
 
 export const DASH = "—";
 
@@ -10,7 +10,7 @@ export function formatNumber(value: number): string {
   return (Math.round(value * 10) / 10).toString().replace(".", ",");
 }
 
-export function formatRatio(value: number | null, total: number): string {
+export function formatRatio(t: TFn, value: number | null, total: number): string {
   return value === null ? DASH : t("teacher.ratio", { value: formatNumber(value), total });
 }
 
@@ -19,7 +19,7 @@ export function pickClass(classes: ClassInfo[], code: string | undefined): Class
   return classes.find((item) => item.code === code) ?? classes[0] ?? null;
 }
 
-export function lastActivity(attempts: { created_at: string }[]): string {
+export function lastActivity(t: TFn, attempts: { created_at: string }[]): string {
   if (attempts.length === 0) return DASH;
   const latest = attempts.reduce((best, a) => (a.created_at > best ? a.created_at : best), attempts[0].created_at);
   const days = Math.floor(Date.now() / 86_400_000) - Math.floor(new Date(latest).getTime() / 86_400_000);
@@ -36,7 +36,7 @@ export type TestsView = {
 };
 
 // Результаты тестов только активных учеников: исключённые в списки и средние не входят.
-export function buildTestsView(data: ClassData): TestsView {
+export function buildTestsView(data: ClassData, t: TFn): TestsView {
   const active = data.students.filter((student) => student.status === "active");
   const column = (kind: TestKind) => data.tests.find((test) => test.kind === kind);
 
@@ -56,6 +56,6 @@ export function buildTestsView(data: ClassData): TestsView {
   return {
     columns: data.tests.map((test) => ({ kind: test.kind, questionCount: test.questionCount, open: test.open })),
     rows,
-    pretestAverage: pre ? formatRatio(average, pre.questionCount) : DASH,
+    pretestAverage: pre ? formatRatio(t, average, pre.questionCount) : DASH,
   };
 }

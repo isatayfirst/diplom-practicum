@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import LangSwitch from "@/components/LangSwitch";
 import TeacherNav from "@/components/teacher/TeacherNav";
 import { listClasses, requireTeacherPage, type ClassInfo } from "@/lib/teacher";
 
@@ -24,6 +25,7 @@ export default async function CabinetLayout({ children }: { children: ReactNode 
         <TeacherNav
           classes={classes.map(({ code, label, studyGroup }) => ({ code, label, studyGroup }))}
           current={classes[0]?.code ?? null}
+          langSwitch={<LangSwitch />}
         />
       </Suspense>
       {children}

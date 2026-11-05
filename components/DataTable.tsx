@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { t } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
 
 type DataTableProps = {
   id: string;
@@ -12,6 +12,7 @@ type DataTableProps = {
 
 // Отметки помогают ученику не сбиться в строках. Они живут только в браузере.
 export default function DataTable({ id, caption, columns, rows }: DataTableProps) {
+  const t = useT();
   const captionId = useId();
   const [marked, setMarked] = useState<ReadonlySet<number>>(new Set());
 

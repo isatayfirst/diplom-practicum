@@ -35,7 +35,7 @@ export async function teacherDenied(): Promise<Response | null> {
 type DbResult<T> = { data: T[] | null; error: { code: string } | null };
 
 // База отдаёт не больше 1000 строк за запрос: читаем страницами.
-async function fetchAll<T>(
+export async function fetchAll<T>(
   page: (from: number, to: number) => PromiseLike<DbResult<T>>,
   label: string,
 ): Promise<T[]> {
@@ -154,7 +154,7 @@ export async function loadClassData(classId: string, studyGroup: StudyGroup): Pr
 }
 
 // Результат теста X / N считает сервер по test_question_keys. Эталон дальше этой функции не уходит.
-async function loadTests(classId: string, studentIds: string[]): Promise<TestColumn[]> {
+export async function loadTests(classId: string, studentIds: string[]): Promise<TestColumn[]> {
   const db = createServerClient();
   const [testRows, questions, keys, opened] = await Promise.all([
     db.from("tests").select("id, kind").returns<{ id: string; kind: TestKind }[]>(),

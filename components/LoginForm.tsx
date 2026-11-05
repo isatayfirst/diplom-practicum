@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
-import { t } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
 
 type Status = "idle" | "checking" | "invalid" | "server" | "network";
 
@@ -16,6 +16,7 @@ const statusIcon: Record<Exclude<Status, "idle">, string> = {
 };
 
 export default function LoginForm() {
+  const t = useT();
   const router = useRouter();
   const classFieldId = useId();
   const codeFieldId = useId();

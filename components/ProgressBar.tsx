@@ -1,8 +1,9 @@
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 
 type ProgressBarProps = { solved: number; total: number };
 
-export default function ProgressBar({ solved, total }: ProgressBarProps) {
+export default async function ProgressBar({ solved, total }: ProgressBarProps) {
+  const t = await getT();
   return (
     <div className="progress">
       <p className="progress-text">{t("home.progressText", { solved, total })}</p>

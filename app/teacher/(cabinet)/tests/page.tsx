@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
+import ExportPanel from "@/components/teacher/ExportPanel";
 import TestResultsTable from "@/components/teacher/TestResultsTable";
 import TestSwitches from "@/components/teacher/TestSwitches";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import { listClasses, loadClassData, requireTeacherPage, type ClassInfo } from "@/lib/teacher";
+import type { TFn } from "@/lib/t";
 import { buildTestsView, pickClass, type TestsView } from "@/lib/teacher-view";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: t("teacher.tests.title") };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("teacher.tests.title") };
+}
 
 type Loaded = { kind: "none" } | { kind: "error" } | { kind: "ok"; cls: ClassInfo; view: TestsView };
 
-async function load(code: string | undefined): Promise<Loaded> {
+async function load(code: string | undefined, t: TFn): Promise<Loaded> {
   try {
     const cls = pickClass(await listClasses(), code);
     if (!cls) return { kind: "none" };
-    return { kind: "ok", cls, view: buildTestsView(await loadClassData(cls.id, cls.studyGroup)) };
+    return { kind: "ok", cls, view: buildTestsView(await loadClassData(cls.id, cls.studyGroup), t) };
   } catch (error) {
     console.error(error);
     return { kind: "error" };
@@ -23,7 +27,8 @@ async function load(code: string | undefined): Promise<Loaded> {
 
 export default async function TestsPage({ searchParams }: { searchParams: Promise<{ class?: string }> }) {
   await requireTeacherPage();
-  const state = await load((await searchParams).class);
+  const t = await getT();
+  const state = await load((await searchParams).class, t);
 
   if (state.kind !== "ok") {
     return (
@@ -51,6 +56,8 @@ export default async function TestsPage({ searchParams }: { searchParams: Promis
         <p className="t-muted">{t("teacher.tests.manageHint")}</p>
         <TestSwitches classId={cls.id} tests={view.columns} />
       </section>
+
+      <ExportPanel classCode={cls.code} classLabel={cls.label} studyGroup={cls.studyGroup} />
 
       <TestResultsTable view={view} />
       <p className="t-muted">{t("teacher.tests.resultsNote")}</p>

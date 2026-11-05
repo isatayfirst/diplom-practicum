@@ -1,7 +1,8 @@
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import type { TestsView } from "@/lib/teacher-view";
 
-export default function TestResultsTable({ view }: { view: TestsView }) {
+export default async function TestResultsTable({ view }: { view: TestsView }) {
+  const t = await getT();
   return (
     <div className="t-table-wrap">
       <table className="t-table" data-table="test-results">
@@ -16,7 +17,7 @@ export default function TestResultsTable({ view }: { view: TestsView }) {
         <tbody>
           {view.rows.map((row) => (
             <tr key={row.number} data-student-number={row.number}>
-              <th scope="row">№{row.number}</th>
+              <th scope="row">{t("common.studentNumber", { number: row.number })}</th>
               <td className="t-num">{row.values.pretest}</td>
               <td className="t-num">{row.values.posttest}</td>
             </tr>
