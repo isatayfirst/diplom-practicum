@@ -8,6 +8,7 @@ import TestList from "@/components/TestList";
 import { getHomeState, type HomeState } from "@/lib/home";
 import { t } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
+import { InactiveStudentError, SESSION_END_PATH } from "@/lib/students";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ async function loadHomeState(studentId: string): Promise<HomeState | null> {
   try {
     return await getHomeState(studentId);
   } catch (error) {
+    if (error instanceof InactiveStudentError) redirect(SESSION_END_PATH);
     console.error(error);
     return null;
   }

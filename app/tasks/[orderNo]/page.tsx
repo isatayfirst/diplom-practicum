@@ -8,6 +8,7 @@ import TaskChart from "@/components/TaskChart";
 import { hasSubmittedText, MAX_TEXT_LENGTH } from "@/lib/answers";
 import { t } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
+import { InactiveStudentError, SESSION_END_PATH } from "@/lib/students";
 import { getDataset, getTask, isOrderNo, type Dataset, type TaskDetail } from "@/lib/tasks";
 import { getStudentClass } from "@/lib/tests";
 
@@ -35,6 +36,7 @@ async function loadTask(orderNo: number, studentId: string): Promise<LoadResult 
     const textSent = task?.answer_type === "text" && (await hasSubmittedText(studentId, task.id));
     return { task, dataset, textSent };
   } catch (error) {
+    if (error instanceof InactiveStudentError) redirect(SESSION_END_PATH);
     console.error(error);
     return null;
   }

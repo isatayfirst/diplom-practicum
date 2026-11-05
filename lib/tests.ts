@@ -1,5 +1,6 @@
 import "server-only";
 import { createServerClient } from "@/lib/tasks";
+import { InactiveStudentError } from "@/lib/students";
 
 export type StudyGroup = "experimental" | "control";
 export type TestKind = "pretest" | "posttest";
@@ -17,14 +18,17 @@ export async function getStudentClass(
 ): Promise<{ classId: string; studyGroup: StudyGroup }> {
   const { data, error } = await createServerClient()
     .from("students")
-    .select("class_id, classes!inner(study_group)")
+    .select("class_id, status, classes!inner(study_group)")
     .eq("id", studentId)
-    .returns<{ class_id: string; classes: { study_group: StudyGroup } }[]>()
+    .returns<{ class_id: string; status: string; classes: { study_group: StudyGroup } }[]>()
     .maybeSingle();
 
   if (error) throw new Error(`students: ${error.code}`);
   // Подписанная cookie есть, а ученика нет: это сбой, а не «первый вход».
   if (!data) throw new Error("students: not found");
+  // Исключённый ученик с ещё действующей cookie: каждая страница и каждый API ученика
+  // проходят через эту функцию, поэтому отказ здесь закрывает всё сразу.
+  if (data.status !== "active") throw new InactiveStudentError();
   return { classId: data.class_id, studyGroup: data.classes.study_group };
 }
 

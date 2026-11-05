@@ -2,7 +2,8 @@ import "server-only";
 import { createServerClient, getTasks, type TaskListItem } from "@/lib/tasks";
 import { getStudentClass, getTestSummaries, type TestSummary } from "@/lib/tests";
 
-export type PathTask = TaskListItem & { solved: boolean; pending: boolean };
+// scored: вывод оценён учителем. Балл на сервере не покидает кабинет: ученик видит только факт оценки.
+export type PathTask = TaskListItem & { solved: boolean; scored: boolean; pending: boolean };
 
 export type HomeState =
   | { variant: "control"; tests: TestSummary[] }
@@ -19,12 +20,25 @@ async function getAttempts(studentId: string) {
   // обрежется по лимиту строк, потеряются выводы и неверные, а не решённые задачи.
   const { data, error } = await createServerClient()
     .from("attempts")
-    .select("task_id, is_correct")
+    .select("id, task_id, is_correct, created_at")
     .eq("student_id", studentId)
-    .order("is_correct", { ascending: false, nullsFirst: false });
+    .order("is_correct", { ascending: false, nullsFirst: false })
+    .returns<{ id: string; task_id: string; is_correct: boolean | null; created_at: string }[]>();
 
   if (error) throw new Error(`attempts: ${error.code}`);
   return data;
+}
+
+// Какие отправки выводов оценены. Сам балл не читается: нужен только факт строки в text_scores.
+async function getScoredAttemptIds(studentId: string): Promise<Set<string>> {
+  const { data, error } = await createServerClient()
+    .from("text_scores")
+    .select("attempt_id, attempts!inner(student_id)")
+    .eq("attempts.student_id", studentId)
+    .returns<{ attempt_id: string }[]>();
+
+  if (error) throw new Error(`text_scores: ${error.code}`);
+  return new Set(data.map((row) => row.attempt_id));
 }
 
 export async function getHomeState(studentId: string): Promise<HomeState> {
@@ -34,25 +48,38 @@ export async function getHomeState(studentId: string): Promise<HomeState> {
     return { variant: "control", tests: await getTestSummaries(studentId, classId) };
   }
 
-  const [tasks, attempts, tests] = await Promise.all([
+  const [tasks, attempts, scoredIds, tests] = await Promise.all([
     getTasks(),
     getAttempts(studentId),
+    getScoredAttemptIds(studentId),
     getTestSummaries(studentId, classId),
   ]);
   const solvedIds = new Set(attempts.filter((a) => a.is_correct === true).map((a) => a.task_id));
-  // Вывод: строка с is_correct = null. Оценки появятся на шаге 7, до тех пор вывод ждёт проверки.
-  const sentIds = new Set(attempts.filter((a) => a.is_correct === null).map((a) => a.task_id));
-  const path = tasks.map((task) => ({
-    ...task,
-    solved: solvedIds.has(task.id),
-    pending: task.answer_type === "text" && sentIds.has(task.id),
-  }));
+  // Вывод: строка с is_correct = null. Считается последняя отправка по задаче:
+  // оценена (строка в text_scores) или ждёт проверки. Новая отправка снова ждёт проверки.
+  const latestSent = new Map<string, { id: string; created_at: string }>();
+  for (const attempt of attempts) {
+    if (attempt.is_correct !== null) continue;
+    const best = latestSent.get(attempt.task_id);
+    if (!best || attempt.created_at > best.created_at) latestSent.set(attempt.task_id, attempt);
+  }
+  const path = tasks.map((task) => {
+    const latest = task.answer_type === "text" ? latestSent.get(task.id) : undefined;
+    const scored = latest !== undefined && scoredIds.has(latest.id);
+    return {
+      ...task,
+      solved: solvedIds.has(task.id),
+      scored,
+      pending: latest !== undefined && !scored,
+    };
+  });
 
   return {
     variant: attempts.length > 0 ? "returning" : "first",
     tasks: path,
-    solvedCount: path.filter((task) => task.solved).length,
-    nextOrderNo: path.find((task) => !task.solved && !task.pending)?.order_no ?? null,
+    // Оценённый вывод засчитывается при любом балле: иначе статус выдал бы ученику результат.
+    solvedCount: path.filter((task) => task.solved || task.scored).length,
+    nextOrderNo: path.find((task) => !task.solved && !task.scored && !task.pending)?.order_no ?? null,
     tests,
   };
 }
