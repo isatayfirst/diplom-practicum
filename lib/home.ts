@@ -3,7 +3,7 @@ import { createServerClient, getTasks, type TaskListItem } from "@/lib/tasks";
 
 type StudyGroup = "experimental" | "control";
 
-export type PathTask = TaskListItem & { solved: boolean };
+export type PathTask = TaskListItem & { solved: boolean; pending: boolean };
 
 export type HomeState =
   | { variant: "control" }
@@ -30,7 +30,7 @@ async function getStudyGroup(studentId: string): Promise<StudyGroup> {
 
 async function getAttempts(studentId: string) {
   // answer_raw сюда не выбираем. Верные попытки идут первыми: если ответ базы
-  // обрежется по лимиту строк, потеряются неверные, а не решённые задачи.
+  // обрежется по лимиту строк, потеряются выводы и неверные, а не решённые задачи.
   const { data, error } = await createServerClient()
     .from("attempts")
     .select("task_id, is_correct")
@@ -46,13 +46,18 @@ export async function getHomeState(studentId: string): Promise<HomeState> {
 
   const [tasks, attempts] = await Promise.all([getTasks(), getAttempts(studentId)]);
   const solvedIds = new Set(attempts.filter((a) => a.is_correct === true).map((a) => a.task_id));
-  const path = tasks.map((task) => ({ ...task, solved: solvedIds.has(task.id) }));
+  // Вывод: строка с is_correct = null. Оценки появятся на шаге 7, до тех пор вывод ждёт проверки.
+  const sentIds = new Set(attempts.filter((a) => a.is_correct === null).map((a) => a.task_id));
+  const path = tasks.map((task) => ({
+    ...task,
+    solved: solvedIds.has(task.id),
+    pending: task.answer_type === "text" && sentIds.has(task.id),
+  }));
 
   return {
     variant: attempts.length > 0 ? "returning" : "first",
     tasks: path,
     solvedCount: path.filter((task) => task.solved).length,
-    // Текстовые задачи до шага 5 решить нельзя, поэтому следующими они не становятся.
-    nextOrderNo: path.find((task) => !task.solved && task.answer_type !== "text")?.order_no ?? null,
+    nextOrderNo: path.find((task) => !task.solved && !task.pending)?.order_no ?? null,
   };
 }
