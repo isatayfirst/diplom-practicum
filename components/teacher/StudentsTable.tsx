@@ -93,6 +93,8 @@ export default function StudentsTable({
         body: JSON.stringify({ studentId: target.id, reason }),
       });
       if (response.ok) {
+        // Строка исчезнет после обновления: фокус вернётся на «Нөмір қосу», а не на пропавшую кнопку «⋯».
+        lastTargetId.current = null;
         setTarget(null);
         router.refresh();
       } else setExcludeError(true);
@@ -109,15 +111,24 @@ export default function StudentsTable({
         <button type="button" className="t-button t-button-outline" onClick={() => window.print()}>
           {t("teacher.students.print")}
         </button>
-        <button ref={addButton} type="button" className="t-button t-button-solid" onClick={addStudent} disabled={adding || atLimit}>
+        <button ref={addButton} type="button" className="t-button t-button-solid" onClick={() => !(adding || atLimit) && addStudent()} aria-disabled={adding || atLimit || undefined}>
           {adding ? t("teacher.students.adding") : t("teacher.students.add")}
         </button>
       </div>
-      <p className="notice notice-error" role="alert" hidden={addError === null}>
-        {addError === "full" ? t("teacher.students.full", { max: 40 }) : addError ? t("teacher.students.addError") : ""}
-      </p>
+      <div className="t-live" role="alert">
+        {addError !== null && (
+          <p className="notice notice-error">
+            {addError === "full" ? t("teacher.students.full", { max: 40 }) : t("teacher.students.addError")}
+          </p>
+        )}
+      </div>
 
-      <div className="t-table-wrap no-print">
+      <div
+        className="t-table-wrap no-print"
+        role="region"
+        tabIndex={0}
+        aria-label={t("teacher.students.tableLabel")}
+      >
         <table className="t-table" id={tableId}>
           <thead>
             <tr>
@@ -156,7 +167,6 @@ export default function StudentsTable({
                           className="t-icon-button"
                           aria-label={t("teacher.students.rowActions", { number: student.number })}
                           aria-expanded={open}
-                          aria-haspopup="true"
                           ref={(node) => {
                             if (node) menuButtons.current.set(student.id, node);
                             else menuButtons.current.delete(student.id);
@@ -220,9 +230,9 @@ export default function StudentsTable({
             </label>
           ))}
         </fieldset>
-        <p className="notice notice-error" role="alert" hidden={!excludeError}>
-          {excludeError ? t("teacher.students.excludeError") : ""}
-        </p>
+        <div className="t-live" role="alert">
+          {excludeError && <p className="notice notice-error">{t("teacher.students.excludeError")}</p>}
+        </div>
       </ConfirmDialog>
     </>
   );

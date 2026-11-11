@@ -81,12 +81,16 @@ export default function TestSwitches({ classId, tests }: { classId: string; test
           );
         })}
       </ul>
-      <p className="t-muted" role="status" hidden={!(pendingKind !== null || refreshing)}>
-        {pendingKind !== null || refreshing ? t("teacher.tests.working") : ""}
-      </p>
-      <p className="notice notice-error" role="alert" hidden={error === null}>
-        {error === "noQuestions" ? t("teacher.tests.errorNoQuestions") : error ? t("teacher.tests.error") : ""}
-      </p>
+      <div className="t-live" role="status">
+        {(pendingKind !== null || refreshing) && <p className="t-muted">{t("teacher.tests.working")}</p>}
+      </div>
+      <div className="t-live" role="alert">
+        {error !== null && (
+          <p className="notice notice-error">
+            {error === "noQuestions" ? t("teacher.tests.errorNoQuestions") : t("teacher.tests.error")}
+          </p>
+        )}
+      </div>
 
       <ConfirmDialog
         open={confirming}

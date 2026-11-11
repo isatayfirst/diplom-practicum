@@ -70,16 +70,20 @@ function GradeItem({ item }: { item: GradeView }) {
             {value}
           </label>
         ))}
-        <button type="button" className="t-button t-button-solid" onClick={save} disabled={busy}>
+        <button type="button" className="t-button t-button-solid" onClick={() => !busy && save()} aria-disabled={busy || undefined}>
           {busy ? t("teacher.grade.saving") : t("teacher.grade.save")}
         </button>
       </fieldset>
-      <p className={message === "saved" ? "t-ok" : "notice notice-error"} role="status" hidden={message === null}>
-        {message === "saved" && t("teacher.grade.saved")}
-        {message === "pick" && t("teacher.grade.pick")}
-        {message === "stale" && t("teacher.grade.stale")}
-        {message === "error" && t("teacher.grade.error")}
-      </p>
+      <div className="t-live" role="status">
+        {message !== null && (
+          <p className={message === "saved" ? "t-ok" : "notice notice-error"}>
+            {message === "saved" && t("teacher.grade.saved")}
+            {message === "pick" && t("teacher.grade.pick")}
+            {message === "stale" && t("teacher.grade.stale")}
+            {message === "error" && t("teacher.grade.error")}
+          </p>
+        )}
+      </div>
     </li>
   );
 }

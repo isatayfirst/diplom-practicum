@@ -99,10 +99,10 @@ export default function ConfirmDialog({
       </h2>
       {children}
       <div className="t-dialog-actions">
-        <button type="button" className="t-button t-button-outline" data-initial-focus onClick={onClose} disabled={busy}>
+        <button type="button" className="t-button t-button-outline" data-initial-focus onClick={() => !busy && onClose()} aria-disabled={busy || undefined}>
           {cancelLabel}
         </button>
-        <button type="button" className="t-button t-button-solid" onClick={onConfirm} disabled={busy}>
+        <button type="button" className="t-button t-button-solid" onClick={() => !busy && onConfirm()} aria-disabled={busy || undefined}>
           {confirmLabel}
         </button>
       </div>
