@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import LangSwitch from "@/components/LangSwitch";
 import LoginForm from "@/components/LoginForm";
+import SessionNote from "@/components/SessionNote";
 import { getT } from "@/lib/messages";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,6 +20,7 @@ export default async function LoginPage() {
         <p className="lead">{t("login.lead")}</p>
       </header>
       <LoginForm />
+      <SessionNote />
     </main>
   );
 }

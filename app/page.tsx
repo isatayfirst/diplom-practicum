@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import LangSwitch from "@/components/LangSwitch";
 import ProgressBar from "@/components/ProgressBar";
+import SessionNote from "@/components/SessionNote";
 import RefreshOnReturn from "@/components/RefreshOnReturn";
 import TaskPath from "@/components/TaskPath";
 import TestList from "@/components/TestList";
@@ -62,6 +63,7 @@ export default async function HomePage() {
         ) : (
           <p className="notice">{t("tests.empty")}</p>
         )}
+        <SessionNote />
       </main>
     );
   }
@@ -99,6 +101,7 @@ export default async function HomePage() {
       {tests.length > 0 && <TestList tests={tests} />}
 
       {tasks.length > 0 && <TaskPath tasks={tasks} nextOrderNo={nextOrderNo} />}
+      <SessionNote />
     </main>
   );
 }

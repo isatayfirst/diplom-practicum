@@ -69,8 +69,25 @@ export default function AnswerPanel({
   const lastRequest = useRef(0);
   const openedAt = useRef(0);
 
+  const panelRef = useRef<HTMLFormElement>(null);
+
   useEffect(() => {
     openedAt.current = performance.now();
+  }, []);
+
+  // Высота нижней панели нужна стилям, чтобы фокус не оказывался под ней.
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const root = document.documentElement;
+    const update = () => root.style.setProperty("--answer-panel-height", `${panel.offsetHeight}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(panel);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--answer-panel-height");
+    };
   }, []);
 
   const invalid = status === "incorrect" || status === "invalid_format";
@@ -127,7 +144,7 @@ export default function AnswerPanel({
   }
 
   return (
-    <form className="answer-panel" onSubmit={submit} noValidate>
+    <form ref={panelRef} className="answer-panel" onSubmit={submit} noValidate>
       {answerType === "choice" && (
         <fieldset
           className="answer-options"

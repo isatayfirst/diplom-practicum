@@ -50,7 +50,9 @@ export default async function TaskChart({ orderNo, dataset, tableId }: TaskChart
   return (
     <>
       <figure className="chart">
-        <figcaption>{t("chart.caption", { label: dataset.label, name: dataset.name })}</figcaption>
+        <figcaption id="chart-caption">{t("chart.caption", { label: dataset.label, name: dataset.name })}</figcaption>
+        {/* Ниже 320 px подписи не должны сжиматься меньше 13 px: диаграмма прокручивается внутри своей области. */}
+        <div className="chart-scroll" role="region" tabIndex={0} aria-labelledby="chart-caption">
         <svg
           role="img"
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -103,6 +105,7 @@ export default async function TaskChart({ orderNo, dataset, tableId }: TaskChart
             {labelName}
           </text>
         </svg>
+        </div>
         {skipped.length > 0 && (
           <p className="chart-note">
             {t("chart.skipped", {

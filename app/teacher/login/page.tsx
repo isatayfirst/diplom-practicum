@@ -1,3 +1,4 @@
+import SessionNote from "@/components/SessionNote";
 import LangSwitch from "@/components/LangSwitch";
 import TeacherLoginForm from "@/components/teacher/TeacherLoginForm";
 import { getT } from "@/lib/messages";
@@ -14,6 +15,7 @@ export default async function TeacherLoginPage() {
         <p className="lead">{t("teacher.login.lead")}</p>
       </header>
       <TeacherLoginForm />
+      <SessionNote />
     </main>
   );
 }

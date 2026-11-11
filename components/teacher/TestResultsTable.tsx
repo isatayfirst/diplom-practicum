@@ -4,7 +4,7 @@ import type { TestsView } from "@/lib/teacher-view";
 export default async function TestResultsTable({ view }: { view: TestsView }) {
   const t = await getT();
   return (
-    <div className="t-table-wrap">
+    <div className="t-table-wrap" role="region" tabIndex={0} aria-label={t("teacher.tests.resultsCaption")}>
       <table className="t-table" data-table="test-results">
         <caption>{t("teacher.tests.resultsCaption")}</caption>
         <thead>

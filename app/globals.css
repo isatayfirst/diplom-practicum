@@ -88,6 +88,12 @@ h1 {
   line-height: 1.2;
 }
 
+h1,
+h2,
+h3 {
+  overflow-wrap: anywhere;
+}
+
 .lead {
   margin-top: 8px;
   color: var(--color-text-secondary);
@@ -347,9 +353,9 @@ h3 {
   white-space: nowrap;
 }
 
-/* Клавиатурный фокус не должен прятаться под нижней панелью. */
+/* Клавиатурный фокус не должен прятаться под нижней панелью: её высоту пишет AnswerPanel. */
 html:has(.answer-panel) {
-  scroll-padding-bottom: 280px;
+  scroll-padding-bottom: calc(var(--answer-panel-height, 280px) + 16px);
 }
 
 .task-page {
@@ -384,7 +390,6 @@ html:has(.answer-panel) {
 .table-hint {
   margin: 4px 0 12px;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
 }
 
 .table-scroll {
@@ -440,7 +445,6 @@ html:has(.answer-panel) {
 .chart-note {
   margin-top: 8px;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
 }
 
 .chart-table-link {
@@ -456,7 +460,7 @@ html:has(.answer-panel) {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 th,
@@ -493,15 +497,26 @@ tbody tr {
   text-align: center;
 }
 
+.mark-cell label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
 .mark-cell input {
   width: 24px;
   height: 24px;
-  margin: 10px;
+  margin: 0;
   accent-color: var(--color-accent);
   cursor: pointer;
 }
 
 .answer-panel {
+  grid-template-columns: minmax(0, 1fr);
+  overflow-wrap: anywhere;
   position: sticky;
   bottom: 0;
   z-index: 5;
@@ -580,7 +595,6 @@ textarea.answer-field {
 
 .answer-hint {
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
 }
 
 .answer-status {
@@ -789,7 +803,6 @@ textarea.answer-field {
 
 .test-hint {
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
 }
 
 .test-status {
@@ -943,7 +956,9 @@ textarea.answer-field {
 
 .lang-switch {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 4px;
+  max-width: 100%;
 }
 
 .lang-switch-button {
@@ -964,4 +979,29 @@ textarea.answer-field {
   background: var(--color-accent-soft);
   color: #0a4f44;
   font-weight: 700;
+}
+
+.session-note {
+  margin-top: 16px;
+  color: var(--color-text-secondary);
+}
+
+.chart-scroll {
+  overflow-x: auto;
+}
+
+.chart-scroll svg {
+  min-width: 320px;
+}
+
+/* Низкий экран (масштаб 200 % на ноутбуке): панель не липнет и не съедает окно. */
+@media (max-height: 520px) {
+  .answer-panel {
+    position: static;
+    max-height: none;
+  }
+
+  html:has(.answer-panel) {
+    scroll-padding-bottom: 0;
+  }
 }

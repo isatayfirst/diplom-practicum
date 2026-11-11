@@ -62,6 +62,7 @@ export default function TeacherNav({
           <label htmlFor="teacher-class">{t("teacher.class")}</label>
           <select
             id="teacher-class"
+            aria-describedby="teacher-class-hint"
             className="t-select"
             value={selected}
             onChange={(event) => router.push(`${pathname}?class=${encodeURIComponent(event.target.value)}`)}
@@ -72,6 +73,9 @@ export default function TeacherNav({
               </option>
             ))}
           </select>
+          <p id="teacher-class-hint" className="t-field-hint">
+            {t("teacher.classHint")}
+          </p>
         </div>
       )}
 

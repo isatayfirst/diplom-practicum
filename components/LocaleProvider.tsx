@@ -27,6 +27,10 @@ function useLocaleValue(): Value {
   return value;
 }
 
+export function useLocale(): Locale {
+  return useLocaleValue().locale;
+}
+
 export function useT(): TFn {
   return useLocaleValue().t;
 }

@@ -52,12 +52,14 @@ export default function DataTable({ id, caption, columns, rows }: DataTableProps
                 }}
               >
                 <td className="mark-cell">
-                  <input
-                    type="checkbox"
-                    checked={marked.has(index)}
-                    onChange={() => toggle(index)}
-                    aria-label={t("task.rowSelect", { row: row[0] })}
-                  />
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={marked.has(index)}
+                      onChange={() => toggle(index)}
+                      aria-label={t("task.rowSelect", { row: row[0] })}
+                    />
+                  </label>
                 </td>
                 {row.map((cell, cellIndex) =>
                   cellIndex === 0 ? (

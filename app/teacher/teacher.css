@@ -54,6 +54,12 @@
 .t-field {
   display: grid;
   gap: 6px;
+  min-width: 0;
+}
+
+.t-field-hint {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
 }
 
 .t-field label {
@@ -63,6 +69,9 @@
 }
 
 .t-select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 48px;
   padding: 0 12px;
   border: 1.5px solid var(--color-border);
@@ -112,6 +121,7 @@
 .t-main {
   flex: 1 1 0;
   min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -125,7 +135,14 @@
 
 .t-muted {
   color: var(--color-text-secondary);
-  font-size: 0.9375rem;
+}
+
+/* Постоянная область для озвучивания: пустая не занимает места, но остаётся в дереве. */
+.t-live:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 .t-cards {
@@ -184,7 +201,7 @@
 .t-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 .t-table caption {
@@ -275,7 +292,6 @@
   padding: 0;
   list-style: none;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
 }
 
 .t-legend li {
@@ -377,7 +393,8 @@
   color: var(--color-accent);
 }
 
-.t-button:disabled {
+.t-button:disabled,
+.t-button[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.6;
 }

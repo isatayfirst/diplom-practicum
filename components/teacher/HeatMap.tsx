@@ -41,8 +41,9 @@ export default async function HeatMap({ overview }: { overview: Overview }) {
     <section className="t-heat" aria-labelledby="heat-title">
       <h2 id="heat-title">{t("teacher.heat.caption")}</h2>
 
-      <div className="t-table-wrap" aria-hidden="true">
-        <table className="t-table t-heat-table" data-table="heat-visual">
+      {/* Область прокрутки доступна с клавиатуры; сама цветная таблица скрыта: то же самое даёт текстовая версия ниже. */}
+      <div className="t-table-wrap" role="region" tabIndex={0} aria-label={t("teacher.heat.visualLabel")}>
+        <table className="t-table t-heat-table" data-table="heat-visual" aria-hidden="true">
           <thead>
             <tr>
               <th scope="col">{t("teacher.heat.student")}</th>
@@ -81,7 +82,7 @@ export default async function HeatMap({ overview }: { overview: Overview }) {
 
       <details className="t-text-version">
         <summary>{t("teacher.heat.textVersion")}</summary>
-        <div className="t-table-wrap">
+        <div className="t-table-wrap" role="region" tabIndex={0} aria-label={t("teacher.heat.textCaption")}>
           <table className="t-table" data-table="heat-text">
             <caption>{t("teacher.heat.textCaption")}</caption>
             <thead>
