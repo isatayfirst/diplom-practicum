@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
 import TestResultsTable from "@/components/teacher/TestResultsTable";
 import TestSwitches from "@/components/teacher/TestSwitches";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import { listClasses, loadClassData, requireTeacherPage, type ClassInfo } from "@/lib/teacher";
 import { buildTestsView, pickClass, type TestsView } from "@/lib/teacher-view";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: t("teacher.tests.title") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("teacher.tests.title") };
+}
 
 type Loaded = { kind: "none" } | { kind: "error" } | { kind: "ok"; cls: ClassInfo; view: TestsView };
 
 async function load(code: string | undefined): Promise<Loaded> {
+  const t = await getT();
   try {
     const cls = pickClass(await listClasses(), code);
     if (!cls) return { kind: "none" };
-    return { kind: "ok", cls, view: buildTestsView(await loadClassData(cls.id, cls.studyGroup)) };
+    return { kind: "ok", cls, view: buildTestsView(t, await loadClassData(cls.id, cls.studyGroup)) };
   } catch (error) {
     console.error(error);
     return { kind: "error" };
@@ -22,6 +26,7 @@ async function load(code: string | undefined): Promise<Loaded> {
 }
 
 export default async function TestsPage({ searchParams }: { searchParams: Promise<{ class?: string }> }) {
+  const t = await getT();
   await requireTeacherPage();
   const state = await load((await searchParams).class);
 

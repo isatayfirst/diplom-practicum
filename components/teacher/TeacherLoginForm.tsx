@@ -2,11 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { t } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
 
 type Status = "idle" | "checking" | "invalid" | "locked" | "server" | "network";
 
 export default function TeacherLoginForm() {
+  const t = useT();
   const router = useRouter();
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<Status>("idle");

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { t, type MessageKey } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 type Question = { position: number; statement: string; options: string[] };
 
@@ -54,6 +55,7 @@ async function post(path: string, payload: object): Promise<Outcome> {
 }
 
 export default function TestRunner({ kind, questions, savedAnswers, startIndex }: TestRunnerProps) {
+  const t = useT();
   const [index, setIndex] = useState(startIndex);
   const [answers, setAnswers] = useState<Record<number, string>>(savedAnswers);
   const [saving, setSaving] = useState(false);

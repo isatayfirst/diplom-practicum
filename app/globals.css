@@ -926,3 +926,36 @@ textarea.answer-field {
     width: 200px;
   }
 }
+
+/* Переключатель языка: одна полоса над страницей, видна на всех экранах. */
+.lang-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px 0;
+}
+
+.lang-switch {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.lang-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border, #767f88);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.lang-button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
+  font-weight: 700;
+}
+

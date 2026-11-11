@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { PathTask } from "@/lib/home";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 
 type TaskPathProps = { tasks: PathTask[]; nextOrderNo: number | null };
 
@@ -21,7 +21,8 @@ function PendingIcon() {
   );
 }
 
-export default function TaskPath({ tasks, nextOrderNo }: TaskPathProps) {
+export default async function TaskPath({ tasks, nextOrderNo }: TaskPathProps) {
+  const t = await getT();
   return (
     <section className="path-section" aria-labelledby="path-title">
       <h2 id="path-title">{t("home.pathLabel")}</h2>

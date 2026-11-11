@@ -34,7 +34,7 @@ AGENTS.md DESIGN.md BACKEND.md ARCHITECTURE.md ROADMAP.md SESSIONS.md   (кор�
 
 ## Принципы
 - Минимум зависимостей, ничего лишнего.
-- Тексты только в `messages/*.json`.
+- Тексты только в `messages/*.json`; язык из cookie `lang` (`kk` по умолчанию), сервер `getT()`, браузер `useT()`.
 - Секретов в коде нет; только переменные окружения.
 - Схема меняется только миграциями.
 

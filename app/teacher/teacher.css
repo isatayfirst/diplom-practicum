@@ -53,6 +53,7 @@
 
 .t-field {
   display: grid;
+  min-width: 0;
   gap: 6px;
 }
 
@@ -63,6 +64,8 @@
 }
 
 .t-select {
+  width: 100%;
+  max-width: 100%;
   min-height: 48px;
   padding: 0 12px;
   border: 1.5px solid var(--color-border);
@@ -723,4 +726,11 @@
     text-align: left;
     font-size: 1.125rem;
   }
+}
+
+.t-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }

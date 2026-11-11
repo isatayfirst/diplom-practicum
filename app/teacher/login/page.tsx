@@ -1,7 +1,8 @@
 import TeacherLoginForm from "@/components/teacher/TeacherLoginForm";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 
-export default function TeacherLoginPage() {
+export default async function TeacherLoginPage() {
+  const t = await getT();
   return (
     <main id="content" tabIndex={-1} className="page login-page">
       <header className="page-header">

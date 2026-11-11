@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import LoginForm from "@/components/LoginForm";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 
-export const metadata: Metadata = { title: t("login.title") };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("login.title") };
+}
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const t = await getT();
   return (
     <main id="content" tabIndex={-1} className="page login-page">
       <header className="page-header">

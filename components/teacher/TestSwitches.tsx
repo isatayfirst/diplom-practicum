@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import ConfirmDialog from "@/components/teacher/ConfirmDialog";
-import { t } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
 
 export type SwitchView = { kind: "pretest" | "posttest"; open: boolean; questionCount: number };
 
 export default function TestSwitches({ classId, tests }: { classId: string; tests: SwitchView[] }) {
+  const t = useT();
   const router = useRouter();
   const [pendingKind, setPendingKind] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);

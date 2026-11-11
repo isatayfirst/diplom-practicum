@@ -6,7 +6,7 @@ import AnswerPanel from "@/components/AnswerPanel";
 import DataTable from "@/components/DataTable";
 import TaskChart from "@/components/TaskChart";
 import { hasSubmittedText, MAX_TEXT_LENGTH } from "@/lib/answers";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
 import { InactiveStudentError, SESSION_END_PATH } from "@/lib/students";
 import { getDataset, getTask, isOrderNo, type Dataset, type TaskDetail } from "@/lib/tasks";
@@ -43,11 +43,13 @@ async function loadTask(orderNo: number, studentId: string): Promise<LoadResult 
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const t = await getT();
   const orderNo = parseOrderNo((await params).orderNo);
   return orderNo ? { title: t("home.taskNumber", { number: orderNo }) } : {};
 }
 
 export default async function TaskPage({ params }: PageProps) {
+  const t = await getT();
   const orderNo = parseOrderNo((await params).orderNo);
   if (orderNo === null) notFound();
 

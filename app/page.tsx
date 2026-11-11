@@ -6,7 +6,7 @@ import RefreshOnReturn from "@/components/RefreshOnReturn";
 import TaskPath from "@/components/TaskPath";
 import TestList from "@/components/TestList";
 import { getHomeState, type HomeState } from "@/lib/home";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
 import { InactiveStudentError, SESSION_END_PATH } from "@/lib/students";
 
@@ -23,6 +23,7 @@ async function loadHomeState(studentId: string): Promise<HomeState | null> {
 }
 
 export default async function HomePage() {
+  const t = await getT();
   const studentId = readSession((await cookies()).get(SESSION_COOKIE)?.value);
   if (!studentId) redirect("/login");
 

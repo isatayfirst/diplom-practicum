@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
-import { locale, t } from "@/lib/messages";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LocaleProvider from "@/components/LocaleProvider";
+import { dictionaryFor } from "@/lib/i18n";
+import { getLocale, getT } from "@/lib/messages";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,19 +12,26 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: t("meta.title"),
-  description: t("meta.description"),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("meta.title"), description: t("meta.description") };
+}
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale();
+  const t = await getT();
   return (
     <html lang={locale} className={inter.className}>
       <body>
-        <a className="skip-link" href="#content">
-          {t("a11y.skipToContent")}
-        </a>
-        {children}
+        <LocaleProvider locale={locale} messages={dictionaryFor(locale)}>
+          <a className="skip-link" href="#content">
+            {t("a11y.skipToContent")}
+          </a>
+          <div className="lang-bar no-print">
+            <LanguageSwitcher />
+          </div>
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   );

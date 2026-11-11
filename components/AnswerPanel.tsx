@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { t, type MessageKey } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
+import type { MessageKey, TFunction } from "@/lib/i18n";
 
 type AnswerType = "number" | "choice" | "text";
 type Status =
@@ -45,7 +46,7 @@ const statusIcon: Record<Exclude<Status, "idle">, string> = {
   rateLimited: "…",
 };
 
-function statusMessage(status: Exclude<Status, "idle">, answerType: AnswerType): string {
+function statusMessage(t: TFunction, status: Exclude<Status, "idle">, answerType: AnswerType): string {
   if (status === "invalid_format") return t(invalidMessage[answerType]);
   if (status === "checking" && answerType === "text") return t("answer.sending");
   return t(`answer.${status}`);
@@ -58,6 +59,7 @@ export default function AnswerPanel({
   textSent,
   textMaxLength,
 }: AnswerPanelProps) {
+  const t = useT();
   const fieldId = useId();
   const hintId = useId();
   const statusId = useId();
@@ -199,7 +201,7 @@ export default function AnswerPanel({
               {statusIcon[shownStatus]}
             </span>
             <span>
-              {statusMessage(shownStatus, answerType)}
+              {statusMessage(t, shownStatus, answerType)}
               {shownStatus === "unauthorized" && (
                 <>
                   {" "}

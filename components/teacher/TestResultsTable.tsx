@@ -1,7 +1,8 @@
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import type { TestsView } from "@/lib/teacher-view";
 
-export default function TestResultsTable({ view }: { view: TestsView }) {
+export default async function TestResultsTable({ view }: { view: TestsView }) {
+  const t = await getT();
   return (
     <div className="t-table-wrap">
       <table className="t-table" data-table="test-results">

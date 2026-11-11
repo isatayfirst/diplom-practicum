@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { t } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
 
 export type GradeView = {
   attemptId: string;
@@ -15,6 +15,7 @@ export type GradeView = {
 type Message = "saved" | "pick" | "stale" | "error" | null;
 
 function GradeItem({ item }: { item: GradeView }) {
+  const t = useT();
   const router = useRouter();
   const [score, setScore] = useState<number | null>(item.score);
   const [saved, setSaved] = useState<number | null>(item.score);

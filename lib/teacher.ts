@@ -69,8 +69,15 @@ export type StudentRow = {
   reason: ExcludeReason | null;
 };
 
-type TaskRow = { id: string; order_no: number; answer_type: AnswerType };
-type AttemptRow = { id: string; student_id: string; task_id: string; is_correct: boolean | null; created_at: string };
+export type TaskRow = { id: string; order_no: number; answer_type: AnswerType };
+export type AttemptRow = {
+  id: string;
+  student_id: string;
+  task_id: string;
+  is_correct: boolean | null;
+  created_at: string;
+  time_spent_ms: number | null;
+};
 
 export type TestColumn = {
   kind: TestKind;
@@ -78,6 +85,8 @@ export type TestColumn = {
   open: boolean;
   // номер ученика -> число верных ответов; только у учеников, завершивших тест
   scores: Map<string, number>;
+  // номер ученика -> суммарное время ответов теста, мс
+  timeMs: Map<string, number>;
 };
 
 export type ClassData = {
@@ -86,6 +95,9 @@ export type ClassData = {
   attempts: AttemptRow[];
   scores: Map<string, number>; // attempt_id -> оценка
   tests: TestColumn[];
+  // первая и последняя дата попыток и ответов теста по классу (ISO) или null
+  firstAt: string | null;
+  lastAt: string | null;
 };
 
 export async function loadClassData(classId: string, studyGroup: StudyGroup): Promise<ClassData> {
@@ -108,7 +120,7 @@ export async function loadClassData(classId: string, studyGroup: StudyGroup): Pr
   const ids = students.map((student) => student.id);
 
   const experimental = studyGroup === "experimental";
-  const [tasks, attempts, scoreRows, tests] = await Promise.all([
+  const [tasks, attempts, scoreRows, testLoad] = await Promise.all([
     experimental
       ? db.from("tasks_public").select("id, order_no, answer_type").order("order_no").returns<TaskRow[]>().then(({ data, error }) => {
           if (error) throw new Error(`tasks_public: ${error.code}`);
@@ -120,7 +132,7 @@ export async function loadClassData(classId: string, studyGroup: StudyGroup): Pr
           (from, to) =>
             db
               .from("attempts")
-              .select("id, student_id, task_id, is_correct, created_at")
+              .select("id, student_id, task_id, is_correct, created_at, time_spent_ms")
               .in("student_id", ids)
               .order("id")
               .range(from, to)
@@ -144,17 +156,23 @@ export async function loadClassData(classId: string, studyGroup: StudyGroup): Pr
     loadTests(classId, ids),
   ]);
 
+  const dates = [...attempts.map((a) => a.created_at), ...testLoad.answerDates].sort();
   return {
     students,
     tasks,
     attempts,
     scores: new Map(scoreRows.map((row) => [row.attempt_id, row.score])),
-    tests,
+    tests: testLoad.columns,
+    firstAt: dates[0] ?? null,
+    lastAt: dates[dates.length - 1] ?? null,
   };
 }
 
 // Результат теста X / N считает сервер по test_question_keys. Эталон дальше этой функции не уходит.
-async function loadTests(classId: string, studentIds: string[]): Promise<TestColumn[]> {
+async function loadTests(
+  classId: string,
+  studentIds: string[],
+): Promise<{ columns: TestColumn[]; answerDates: string[] }> {
   const db = createServerClient();
   const [testRows, questions, keys, opened] = await Promise.all([
     db.from("tests").select("id, kind").returns<{ id: string; kind: TestKind }[]>(),
@@ -180,15 +198,17 @@ async function loadTests(classId: string, studentIds: string[]): Promise<TestCol
                 .returns<{ student_id: string; test_id: string }[]>(),
             "test_sessions",
           ),
-          fetchAll<{ student_id: string; question_id: string; answer_raw: string }>(
+          fetchAll<{ student_id: string; question_id: string; answer_raw: string; created_at: string; time_spent_ms: number | null }>(
             (from, to) =>
               db
                 .from("test_answers")
-                .select("student_id, question_id, answer_raw")
+                .select("student_id, question_id, answer_raw, created_at, time_spent_ms")
                 .in("student_id", studentIds)
                 .order("id")
                 .range(from, to)
-                .returns<{ student_id: string; question_id: string; answer_raw: string }[]>(),
+                .returns<
+                  { student_id: string; question_id: string; answer_raw: string; created_at: string; time_spent_ms: number | null }[]
+                >(),
             "test_answers",
           ),
         ])
@@ -197,7 +217,7 @@ async function loadTests(classId: string, studentIds: string[]): Promise<TestCol
   const keyOf = new Map(keys.data!.map((row) => [row.question_id, row.correct_option]));
   const finished = new Set(sessions.map((row) => `${row.student_id}|${row.test_id}`));
 
-  return TEST_KINDS.flatMap((kind) => {
+  const columns = TEST_KINDS.flatMap((kind) => {
     const test = testRows.data!.find((row) => row.kind === kind);
     if (!test) return [];
     const own = new Set(questions.data!.filter((row) => row.test_id === test.id).map((row) => row.id));
@@ -205,8 +225,10 @@ async function loadTests(classId: string, studentIds: string[]): Promise<TestCol
     for (const studentId of studentIds) {
       if (finished.has(`${studentId}|${test.id}`)) scores.set(studentId, 0);
     }
+    const timeMs = new Map<string, number>();
     for (const answer of answers) {
       if (!own.has(answer.question_id) || !scores.has(answer.student_id)) continue;
+      timeMs.set(answer.student_id, (timeMs.get(answer.student_id) ?? 0) + (answer.time_spent_ms ?? 0));
       if (keyOf.get(answer.question_id) === answer.answer_raw) {
         scores.set(answer.student_id, (scores.get(answer.student_id) ?? 0) + 1);
       }
@@ -217,9 +239,11 @@ async function loadTests(classId: string, studentIds: string[]): Promise<TestCol
         questionCount: own.size,
         open: opened.data!.some((row) => row.test_id === test.id && row.open),
         scores,
+        timeMs,
       },
     ];
   });
+  return { columns, answerDates: answers.map((answer) => answer.created_at) };
 }
 
 // ---------- тепловая карта ----------

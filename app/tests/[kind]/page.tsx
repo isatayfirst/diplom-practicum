@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import TestRunner from "@/components/TestRunner";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import { readSession, SESSION_COOKIE } from "@/lib/session";
 import { InactiveStudentError, SESSION_END_PATH } from "@/lib/students";
 import { getStudentClass, getTestState, isTestKind, type TestState } from "@/lib/tests";
@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 type PageProps = { params: Promise<{ kind: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const t = await getT();
   const { kind } = await params;
   return isTestKind(kind) ? { title: t(`tests.${kind}`) } : {};
 }
@@ -29,7 +30,8 @@ async function loadTest(studentId: string, kind: "pretest" | "posttest") {
   }
 }
 
-function BackLink() {
+async function BackLink() {
+  const t = await getT();
   return (
     <Link className="back-link" href="/">
       <span aria-hidden="true">←</span> {t("tests.back")}
@@ -38,6 +40,7 @@ function BackLink() {
 }
 
 export default async function TestPage({ params }: PageProps) {
+  const t = await getT();
   const { kind } = await params;
   if (!isTestKind(kind)) notFound();
 

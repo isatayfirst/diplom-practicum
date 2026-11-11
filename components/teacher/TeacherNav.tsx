@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { t } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
 
 export type ClassOption = { code: string; label: string; studyGroup: "experimental" | "control" };
 
@@ -11,9 +11,11 @@ const LINKS = [
   { href: "/teacher", key: "teacher.nav.overview" },
   { href: "/teacher/students", key: "teacher.nav.students" },
   { href: "/teacher/tests", key: "teacher.nav.tests" },
+  { href: "/teacher/export", key: "teacher.nav.export" },
 ] as const;
 
 export default function TeacherNav({ classes, current }: { classes: ClassOption[]; current: string | null }) {
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const search = useSearchParams();
