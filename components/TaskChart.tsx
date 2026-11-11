@@ -1,4 +1,4 @@
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import type { Dataset } from "@/lib/tasks";
 
 type TaskChartProps = { orderNo: number; dataset: Dataset; tableId: string };
@@ -23,7 +23,8 @@ function parseValue(text: string): number | null {
 }
 
 // Показывает только значения таблицы: ни разниц, ни тренда, ни вывода здесь быть не должно.
-export default function TaskChart({ orderNo, dataset, tableId }: TaskChartProps) {
+export default async function TaskChart({ orderNo, dataset, tableId }: TaskChartProps) {
+  const t = await getT();
   const chart = CHARTS[orderNo];
   if (!chart) return null;
 

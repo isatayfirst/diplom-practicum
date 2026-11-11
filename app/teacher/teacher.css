@@ -724,3 +724,17 @@
     font-size: 1.125rem;
   }
 }
+
+/* Блок CSV: ссылки выглядят как кнопки. */
+.t-export-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.t-export-links .t-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}

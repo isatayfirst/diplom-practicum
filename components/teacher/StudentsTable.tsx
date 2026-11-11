@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import ConfirmDialog from "@/components/teacher/ConfirmDialog";
-import { t } from "@/lib/messages";
+import { useT } from "@/components/LocaleProvider";
 
 export type StudentView = {
   id: string;
@@ -30,6 +30,7 @@ export default function StudentsTable({
   showTasks: boolean;
   atLimit: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);

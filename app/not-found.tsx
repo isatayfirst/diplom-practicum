@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getT();
   return (
     <main id="content" tabIndex={-1} className="page">
       <header className="page-header">

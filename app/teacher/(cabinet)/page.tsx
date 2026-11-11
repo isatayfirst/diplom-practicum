@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import GradeList from "@/components/teacher/GradeList";
 import HeatMap from "@/components/teacher/HeatMap";
 import TestResultsTable from "@/components/teacher/TestResultsTable";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import {
   buildOverview,
   listClasses,
@@ -13,17 +13,20 @@ import {
   type GradeItem,
   type Overview,
 } from "@/lib/teacher";
+import type { TFn } from "@/lib/t";
 import { buildTestsView, DASH, formatNumber, formatRatio, pickClass, type TestsView } from "@/lib/teacher-view";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: t("teacher.overview.title") };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("teacher.overview.title") };
+}
 
 type Loaded =
   | { kind: "none" }
   | { kind: "error" }
   | { kind: "ok"; cls: ClassInfo; overview: Overview; grade: GradeItem[]; tests: TestsView };
 
-async function load(code: string | undefined): Promise<Loaded> {
+async function load(code: string | undefined, t: TFn): Promise<Loaded> {
   try {
     const cls = pickClass(await listClasses(), code);
     if (!cls) return { kind: "none" };
@@ -38,7 +41,7 @@ async function load(code: string | undefined): Promise<Loaded> {
         .map((item) => ({ ...item, answer: answers.get(item.attemptId) ?? "" }))
         // Порядок не зависит от оценки: после сохранения строка остаётся на месте, под рукой и под фокусом.
         .sort((a, b) => a.studentNumber - b.studentNumber || a.orderNo - b.orderNo),
-      tests: buildTestsView(data),
+      tests: buildTestsView(data, t),
     };
   } catch (error) {
     console.error(error);
@@ -57,7 +60,8 @@ function Card({ label, value }: { label: string; value: string }) {
 
 export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ class?: string }> }) {
   await requireTeacherPage();
-  const state = await load((await searchParams).class);
+  const t = await getT();
+  const state = await load((await searchParams).class, t);
 
   if (state.kind !== "ok") {
     return (
@@ -93,7 +97,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
           </>
         ) : (
           <>
-            <Card label={t("teacher.card.avgDone")} value={formatRatio(overview.avgDone, total)} />
+            <Card label={t("teacher.card.avgDone")} value={formatRatio(t, overview.avgDone, total)} />
             <Card label={t("teacher.card.avgAttempts")} value={overview.avgAttempts === null ? DASH : formatNumber(overview.avgAttempts)} />
             <Card
               label={t("teacher.card.busiest")}

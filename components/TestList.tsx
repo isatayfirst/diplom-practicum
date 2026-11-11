@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { t } from "@/lib/messages";
+import { getT } from "@/lib/messages";
 import type { TestStatus, TestSummary } from "@/lib/tests";
 
 const statusIcon: Record<TestStatus, string> = {
@@ -10,7 +10,8 @@ const statusIcon: Record<TestStatus, string> = {
 
 type TestListProps = { tests: TestSummary[] };
 
-export default function TestList({ tests }: TestListProps) {
+export default async function TestList({ tests }: TestListProps) {
+  const t = await getT();
   return (
     <section className="test-list" aria-labelledby="tests-title">
       <h2 id="tests-title">{t("tests.title")}</h2>

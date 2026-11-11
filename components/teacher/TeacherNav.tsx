@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { t } from "@/lib/messages";
+import { useState, type ReactNode } from "react";
+import { useT } from "@/components/LocaleProvider";
 
 export type ClassOption = { code: string; label: string; studyGroup: "experimental" | "control" };
 
@@ -13,7 +13,18 @@ const LINKS = [
   { href: "/teacher/tests", key: "teacher.nav.tests" },
 ] as const;
 
-export default function TeacherNav({ classes, current }: { classes: ClassOption[]; current: string | null }) {
+const EXPORT_LINK = { href: "/teacher/tests", hash: "#export", key: "teacher.nav.export" } as const;
+
+export default function TeacherNav({
+  classes,
+  current,
+  langSwitch,
+}: {
+  classes: ClassOption[];
+  current: string | null;
+  langSwitch: ReactNode;
+}) {
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const search = useSearchParams();
@@ -70,7 +81,10 @@ export default function TeacherNav({ classes, current }: { classes: ClassOption[
             {t(link.key)}
           </Link>
         ))}
+        <Link href={`${EXPORT_LINK.href}${query}${EXPORT_LINK.hash}`}>{t(EXPORT_LINK.key)}</Link>
       </nav>
+
+      {langSwitch}
 
       <button type="button" className="t-logout" onClick={logout} disabled={leaving}>
         {t("teacher.logout")}
